@@ -20,7 +20,7 @@ Curated [Claude Code](https://claude.ai/code) skills for AI agent development.
 /plugin marketplace add flaremity/skills
 
 # Install the skill
-/plugin install claude-agent-sdk-ts@flaremity-skills
+/plugin install claude-agent-sdk-ts@flaremity
 ```
 
 ### Manual Install (Git Clone)
@@ -28,12 +28,12 @@ Curated [Claude Code](https://claude.ai/code) skills for AI agent development.
 ```bash
 # Clone into your Claude Code skills directory
 cd ~/.claude/skills/
-git clone https://github.com/flaremity/skills.git flaremity-skills
+git clone https://github.com/flaremity/skills.git flaremity
 
 # Or clone a single skill
 cd ~/.claude/skills/
-mkdir -p flaremity-skills
-cd flaremity-skills
+mkdir -p flaremity
+cd flaremity
 git init
 git remote add origin https://github.com/flaremity/skills.git
 git sparse-checkout init --cone

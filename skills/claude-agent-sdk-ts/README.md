@@ -25,21 +25,21 @@ A comprehensive reference skill for developing TypeScript applications with [`@a
 /plugin marketplace add flaremity/skills
 
 # Install this skill
-/plugin install claude-agent-sdk-ts@flaremity-skills
+/plugin install claude-agent-sdk-ts@flaremity
 ```
 
 ### Option 2: Manual (Git Clone)
 
 ```bash
 cd ~/.claude/skills/
-git clone https://github.com/flaremity/skills.git flaremity-skills
+git clone https://github.com/flaremity/skills.git flaremity
 ```
 
 Then reference in your project's `.claude/settings.json`:
 
 ```json
 {
-  "skills": ["~/.claude/skills/flaremity-skills/skills/claude-agent-sdk-ts"]
+  "skills": ["~/.claude/skills/flaremity/skills/claude-agent-sdk-ts"]
 }
 ```
 
