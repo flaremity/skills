@@ -1,0 +1,22 @@
+{
+  "name": "claude-agent-sdk-ts",
+  "version": "0.2.44",
+  "description": "TypeScript reference for @anthropic-ai/claude-agent-sdk — build AI agents with Claude Code",
+  "author": {
+    "name": "Flaremity"
+  },
+  "homepage": "https://github.com/flaremity/skills",
+  "repository": "https://github.com/flaremity/skills",
+  "license": "MIT",
+  "keywords": [
+    "claude-sdk",
+    "agent-sdk",
+    "typescript",
+    "mcp-server",
+    "subagent",
+    "multi-agent",
+    "claude-code"
+  ],
+  "skills": "./",
+  "agents": []
+}

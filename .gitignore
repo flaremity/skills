@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node / Bun
+node_modules/
+.bun/
+
+# Environment
+.env
+.env.*
+
+# Build
+dist/
+*.tgz
