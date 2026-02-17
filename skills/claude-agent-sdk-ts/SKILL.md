@@ -696,4 +696,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on [jezweb/claude-skills](https://github.com/jezweb/claude-skills) (MIT License). Updated and expanded for SDK v0.2.44.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.44.*
