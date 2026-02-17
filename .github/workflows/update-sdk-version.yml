@@ -1,0 +1,227 @@
+name: Update Claude Agent SDK Version
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # 09:00 ICT (02:00 UTC) daily
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force update even if versions match"
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: sdk-update
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      current_version: ${{ steps.versions.outputs.current }}
+      latest_version: ${{ steps.versions.outputs.latest }}
+      should_update: ${{ steps.decide.outputs.should_update }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current and latest versions
+        id: versions
+        run: |
+          CURRENT=$(jq -r '.version' skills/claude-agent-sdk-ts/.claude-plugin/plugin.json)
+          echo "current=${CURRENT}" >> "$GITHUB_OUTPUT"
+
+          LATEST=$(curl -s "https://registry.npmjs.org/@anthropic-ai/claude-agent-sdk/latest" \
+            | jq -r '.version // empty')
+          if [ -z "${LATEST}" ]; then
+            echo "::error::Failed to fetch latest version from npm"
+            exit 1
+          fi
+          echo "latest=${LATEST}" >> "$GITHUB_OUTPUT"
+
+          if [ "${CURRENT}" = "${LATEST}" ]; then
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::SDK is up to date (v${CURRENT})"
+          else
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Update available: v${CURRENT} → v${LATEST}"
+          fi
+
+      - name: Check for existing PR
+        id: check_pr
+        if: steps.versions.outputs.needs_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_COUNT=$(gh pr list \
+            --state open \
+            --head "chore/update-sdk-${{ steps.versions.outputs.latest }}" \
+            --json number --jq 'length')
+          if [ "${PR_COUNT}" -gt 0 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::PR already exists for v${{ steps.versions.outputs.latest }}"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Decide whether to proceed
+        id: decide
+        run: |
+          NEEDS="${{ steps.versions.outputs.needs_update }}"
+          EXISTS="${{ steps.check_pr.outputs.exists }}"
+          FORCE="${{ inputs.force }}"
+          if [ "${FORCE}" = "true" ] || { [ "${NEEDS}" = "true" ] && [ "${EXISTS}" != "true" ]; }; then
+            echo "should_update=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_update=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  update:
+    needs: check
+    if: needs.check.outputs.should_update == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: "--max-turns 25 --model claude-sonnet-4-20250514"
+          prompt: |
+            ## Task: Update claude-agent-sdk-ts skill to v${{ needs.check.outputs.latest_version }}
+
+            The npm package `@anthropic-ai/claude-agent-sdk` has a new version.
+            - **Current version in repo:** ${{ needs.check.outputs.current_version }}
+            - **Latest version on npm:** ${{ needs.check.outputs.latest_version }}
+
+            ### Step 1 — Research what changed
+
+            Find what changed between v${{ needs.check.outputs.current_version }} and v${{ needs.check.outputs.latest_version }}:
+            - Run: `npm view @anthropic-ai/claude-agent-sdk --json` for package metadata
+            - Web search for release notes at https://github.com/anthropics/claude-code or npm
+            - Note any new APIs, changed signatures, new options, deprecations, or breaking changes
+
+            ### Step 2 — Update version strings (ALL 22 occurrences)
+
+            Read each file first, then replace `${{ needs.check.outputs.current_version }}` → `${{ needs.check.outputs.latest_version }}` in:
+
+            **JSON manifests:**
+            - `skills/claude-agent-sdk-ts/.claude-plugin/plugin.json` (version field)
+            - `.claude-plugin/marketplace.json` (version in plugins array)
+
+            **Markdown docs:**
+            - `skills/claude-agent-sdk-ts/SKILL.md` line ~11 (package version)
+            - `skills/claude-agent-sdk-ts/SKILL.md` last line (footer "SDK v...")
+            - `skills/claude-agent-sdk-ts/README.md` line ~7 (SDK Version)
+            - `skills/claude-agent-sdk-ts/README.md` line ~87 (credits footer)
+            - `README.md` line ~12 (root readme Available Skills table)
+            - `skills/claude-agent-sdk-ts/references/known-issues.md` line 3
+            - `skills/claude-agent-sdk-ts/references/query-api-reference.md` line 3
+            - `skills/claude-agent-sdk-ts/references/session-management.md` line 3
+            - `skills/claude-agent-sdk-ts/references/mcp-servers-guide.md` line 3
+            - `skills/claude-agent-sdk-ts/references/permissions-guide.md` line 3
+
+            **Shell script:**
+            - `skills/claude-agent-sdk-ts/scripts/check-versions.sh` line 8 (CURRENT=)
+
+            **TypeScript templates (all line 3 JSDoc):**
+            - `skills/claude-agent-sdk-ts/templates/basic-query.ts`
+            - `skills/claude-agent-sdk-ts/templates/structured-output.ts`
+            - `skills/claude-agent-sdk-ts/templates/error-handling.ts`
+            - `skills/claude-agent-sdk-ts/templates/multi-agent-workflow.ts`
+            - `skills/claude-agent-sdk-ts/templates/permission-control.ts`
+            - `skills/claude-agent-sdk-ts/templates/custom-mcp-server.ts`
+            - `skills/claude-agent-sdk-ts/templates/session-management.ts`
+            - `skills/claude-agent-sdk-ts/templates/hooks-example.ts`
+
+            **DO NOT touch these files (historical entries):**
+            - `CHANGELOG.md`
+            - `.github/ISSUE_TEMPLATE/bug_report.md`
+
+            **Also update dates:**
+            - `skills/claude-agent-sdk-ts/SKILL.md` line ~13: change "Last verified" date to today (YYYY-MM-DD)
+            - `skills/claude-agent-sdk-ts/references/known-issues.md` line 3: change "Last updated" date to today
+
+            ### Step 3 — Update Version History table
+
+            In `skills/claude-agent-sdk-ts/SKILL.md`, find the "Version History (Recent)" table:
+            - Change existing `v${{ needs.check.outputs.current_version }} | Latest stable release` to a brief description of what that version contained (or keep as-is if unknown)
+            - Add a new first row: `| v${{ needs.check.outputs.latest_version }} | Latest stable release |`
+            - If you found actual changelog info, use a real description instead of "Latest stable release"
+
+            ### Step 4 — Update content IF API changes found
+
+            ONLY if Step 1 found concrete new APIs, changed signatures, new exports, or deprecations:
+            - Update relevant sections in SKILL.md
+            - Update affected templates in `templates/`
+            - Update affected references in `references/`
+            - Update rules in `rules/claude-agent-sdk-ts.md`
+
+            If NO API changes found, SKIP this step. Do NOT make speculative changes.
+
+            ### Step 5 — Validate
+
+            Run:
+            ```bash
+            python3 -m json.tool < .claude-plugin/marketplace.json > /dev/null && echo "marketplace.json OK"
+            python3 -m json.tool < skills/claude-agent-sdk-ts/.claude-plugin/plugin.json > /dev/null && echo "plugin.json OK"
+            ```
+
+            Then verify no old version remains:
+            ```bash
+            grep -r "${{ needs.check.outputs.current_version }}" skills/ .claude-plugin/ README.md --include="*.json" --include="*.md" --include="*.ts" --include="*.sh" | grep -v CHANGELOG.md | grep -v bug_report.md
+            ```
+            This should return empty (all updated).
+
+            ### Step 6 — Create branch, commit, push, and open PR
+
+            ```bash
+            BRANCH="chore/update-sdk-${{ needs.check.outputs.latest_version }}"
+            git checkout -b "$BRANCH"
+            git add -A
+            git commit -m "feat: update claude-agent-sdk-ts to v${{ needs.check.outputs.latest_version }}
+
+            Update @anthropic-ai/claude-agent-sdk references from
+            v${{ needs.check.outputs.current_version }} to v${{ needs.check.outputs.latest_version }}.
+
+            Automated by GitHub Actions + Claude Code."
+            git push origin "$BRANCH"
+            ```
+
+            Then create the PR (use heredoc for body):
+            ```bash
+            gh pr create \
+              --title "feat: update claude-agent-sdk-ts to v${{ needs.check.outputs.latest_version }}" \
+              --base main \
+              --head "$BRANCH" \
+              --body "$(cat <<'PREOF'
+            ## Summary
+
+            - Update `@anthropic-ai/claude-agent-sdk`: `${{ needs.check.outputs.current_version }}` → `${{ needs.check.outputs.latest_version }}`
+            - Updated version strings across all skill files (22 occurrences)
+            - Updated Version History table in SKILL.md
+            - [Describe any API/content changes here, or "No API changes detected"]
+
+            ## Type of Change
+
+            - [x] Improvement to existing skill
+
+            ## Checklist
+
+            - [x] JSON manifests are valid
+            - [x] SKILL.md has required frontmatter
+            - [x] plugin.json version matches marketplace.json
+            - [x] All version references updated consistently
+
+            ---
+            🤖 Automated by [Claude Code](https://claude.ai/code) via GitHub Actions
+            PREOF
+            )"
+            ```
