@@ -16,7 +16,11 @@ Curated [Claude Code](https://claude.ai/code) skills for AI agent development.
 ### Plugin Marketplace
 
 ```bash
-claude skill install flaremity/skills/claude-agent-sdk-ts
+# Add the Flaremity marketplace
+/plugin marketplace add flaremity/skills
+
+# Install the skill
+/plugin install claude-agent-sdk-ts@flaremity-skills
 ```
 
 ### Manual Install (Git Clone)

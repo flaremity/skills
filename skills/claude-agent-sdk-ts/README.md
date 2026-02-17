@@ -21,7 +21,11 @@ A comprehensive reference skill for developing TypeScript applications with [`@a
 ### Option 1: Claude Code Plugin Marketplace
 
 ```bash
-claude skill install flaremity/skills/claude-agent-sdk-ts
+# Add the Flaremity marketplace (one-time)
+/plugin marketplace add flaremity/skills
+
+# Install this skill
+/plugin install claude-agent-sdk-ts@flaremity-skills
 ```
 
 ### Option 2: Manual (Git Clone)
