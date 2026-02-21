@@ -2,7 +2,8 @@ name: Update Claude Agent SDK Version
 
 on:
   schedule:
-    - cron: "0 2 * * *" # 09:00 ICT (02:00 UTC) daily
+    - cron: "0 2 * * *"  # 09:00 ICT (02:00 UTC)
+    - cron: "0 11 * * *" # 18:00 ICT (11:00 UTC)
   workflow_dispatch:
     inputs:
       force:
