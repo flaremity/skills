@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.44`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.50`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-02-17
+> **Last verified:** 2026-02-21
 
 ## Quick Start
 
@@ -685,7 +685,8 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
-| v0.2.44 | Latest stable release |
+| v0.2.50 | Latest stable release |
+| v0.2.44 | Stability improvements |
 | v0.2.33 | `TeammateIdle`/`TaskCompleted` hooks, custom `sessionId` |
 | v0.2.31 | `stop_reason` in QueryResult |
 | v0.2.30 | `debug`/`debugFile` options |
@@ -696,4 +697,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.44.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.50.*

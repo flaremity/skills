@@ -9,7 +9,7 @@ Curated [Claude Code](https://claude.ai/code) skills for AI agent development.
 
 | Skill | Description | Version |
 |-------|-------------|---------|
-| [claude-agent-sdk-ts](skills/claude-agent-sdk-ts/) | TypeScript reference for `@anthropic-ai/claude-agent-sdk` — build AI agents with Claude Code | `0.2.44` |
+| [claude-agent-sdk-ts](skills/claude-agent-sdk-ts/) | TypeScript reference for `@anthropic-ai/claude-agent-sdk` — build AI agents with Claude Code | `0.2.50` |
 
 ## Quick Install
 
