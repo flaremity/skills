@@ -1,6 +1,6 @@
 # Known Issues & Workarounds
 
-> `@anthropic-ai/claude-agent-sdk@0.2.44` — Last updated: 2026-02-17
+> `@anthropic-ai/claude-agent-sdk@0.2.50` — Last updated: 2026-02-21
 
 ## Active Issues
 
@@ -130,6 +130,7 @@ for await (const msg of session[method]("prompt")) { /* ... */ }
 | v0.2.30 | Hard to debug SDK issues | Added `debug`/`debugFile` |
 | v0.2.31 | No way to know why query stopped | Added `stop_reason` |
 | v0.2.33 | No team coordination events | Added `TeammateIdle`/`TaskCompleted` hooks |
+| v0.2.50 | `delegate` permission mode removed | Use `default` or `acceptEdits` with `canUseTool` for delegation patterns |
 
 ## Debugging Tips
 

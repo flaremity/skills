@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.44`
+> `@anthropic-ai/claude-agent-sdk@0.2.50`
 
 ## `query(options)` Function
 
@@ -69,6 +69,12 @@ interface QueryOptions {
   // Beta
   betaFeatures?: string[];                    // e.g. ["context-1m-2025-08-07"]
 
+  // Thinking (v0.2.50+)
+  thinking?: ThinkingConfig;                      // { type: 'adaptive' } | { type: 'enabled', budgetTokens?: number } | { type: 'disabled' }
+
+  // Prompt suggestions (v0.2.50+)
+  promptSuggestions?: boolean;                    // Enable prompt suggestions after each turn
+
   // Hooks
   hooks?: HookConfig;
 }
@@ -120,6 +126,15 @@ Reconnects a disconnected MCP server by name.
 
 Enables or disables an MCP server at runtime.
 
+## ThinkingConfig Type (v0.2.50+)
+
+```ts
+type ThinkingConfig =
+  | { type: 'adaptive' }                    // Claude decides when/how much to think (Opus 4.6+)
+  | { type: 'enabled'; budgetTokens?: number }  // Fixed thinking budget (budgetTokens now optional)
+  | { type: 'disabled' };                   // No extended thinking
+```
+
 ## SDKMessage Union Type
 
 ```ts
@@ -128,9 +143,12 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string }  // (v0.2.50+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
-  | { type: "progress"; progress: number; total?: number };
+  | { type: "progress"; progress: number; total?: number }
+  | { type: "rate_limit" }                          // Rate limit event (v0.2.50+)
+  | { type: "prompt_suggestion"; suggestion: string };  // Prompt suggestion (v0.2.50+)
 ```
 
 ### Message Type Details
@@ -144,6 +162,9 @@ type SDKMessage =
 | `error` | Error occurred | `error`, `code` (optional) |
 | `result` | Final structured output | `content` (JSON string), `sessionId` |
 | `progress` | Progress update | `progress`, `total` (optional) |
+| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `task_type` (optional) |
+| `rate_limit` | Rate limit hit (v0.2.50+) | — |
+| `prompt_suggestion` | Suggested next prompt (v0.2.50+) | `suggestion` |
 
 ## ToolUseDecision Type
 

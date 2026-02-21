@@ -1,6 +1,6 @@
 /**
  * Comprehensive error handling patterns
- * @anthropic-ai/claude-agent-sdk@0.2.44
+ * @anthropic-ai/claude-agent-sdk@0.2.50
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
 

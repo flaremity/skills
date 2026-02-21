@@ -1,6 +1,6 @@
 /**
  * Hook events — react to SDK lifecycle events
- * @anthropic-ai/claude-agent-sdk@0.2.44
+ * @anthropic-ai/claude-agent-sdk@0.2.50
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
 
@@ -66,7 +66,37 @@ async function main() {
           {
             handler: async (event) => {
               console.log(`[Stop] Reason: ${event.reason}`);
+              // v0.2.50+: access last assistant message without parsing transcript
+              if (event.last_assistant_message) {
+                console.log(`[Stop] Last message: ${event.last_assistant_message.slice(0, 100)}`);
+              }
               printMetrics();
+            },
+          },
+        ],
+
+        // v0.2.50+: React to configuration changes
+        ConfigChange: [
+          {
+            handler: async (event) => {
+              console.log(`[ConfigChange] Source: ${event.source}, File: ${event.file_path ?? "N/A"}`);
+            },
+          },
+        ],
+
+        // v0.2.50+: React to git worktree lifecycle
+        WorktreeCreate: [
+          {
+            handler: async (event) => {
+              console.log(`[WorktreeCreate] Name: ${event.name}`);
+            },
+          },
+        ],
+
+        WorktreeRemove: [
+          {
+            handler: async (event) => {
+              console.log(`[WorktreeRemove] Path: ${event.worktree_path}`);
             },
           },
         ],

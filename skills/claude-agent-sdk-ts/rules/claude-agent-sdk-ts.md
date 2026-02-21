@@ -73,10 +73,17 @@ Settings override order (highest wins):
 - **Use `enableFileCheckpointing: true`** for risky operations + `q.rewindFiles()` on failure
 - **`rewindFiles()` only tracks Write/Edit** — Bash file changes are NOT tracked
 
+## ThinkingConfig (v0.2.50+)
+
+- **Use `ThinkingConfig` type** for the `thinking` option — `{ type: 'adaptive' }`, `{ type: 'enabled', budgetTokens?: number }`, or `{ type: 'disabled' }`
+- **`budgetTokens` is now optional** on `{ type: 'enabled' }` — omit for model default
+- **Prefer `{ type: 'adaptive' }` for Opus 4.6+** — lets Claude decide when to think
+
 ## Anti-Patterns
 
 - ❌ `query({ prompt })` with no options — missing model, maxTurns, permissions
 - ❌ `permissionMode: "bypassPermissions"` without sandbox — security risk
+- ❌ `permissionMode: "delegate"` — removed in v0.2.50, use `default` or `acceptEdits` with `canUseTool` instead
 - ❌ Not calling `q.close()` — resource leak
 - ❌ Resuming with different model — causes errors
 - ❌ Giant `systemPrompt` — wastes context window tokens

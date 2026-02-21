@@ -1,6 +1,6 @@
 # Permissions Guide
 
-> `@anthropic-ai/claude-agent-sdk@0.2.44`
+> `@anthropic-ai/claude-agent-sdk@0.2.50`
 
 ## Permission Modes
 
@@ -129,6 +129,28 @@ query({
 ```
 
 The sandbox provides OS-level isolation even with `bypassPermissions`.
+
+### Sandbox Filesystem Config (v0.2.50+)
+
+Fine-grained filesystem restrictions within the sandbox:
+
+```ts
+query({
+  prompt: "Run the test suite",
+  options: {
+    permissionMode: "bypassPermissions",
+    sandbox: {
+      type: "docker",
+      image: "node:20-slim",
+      filesystem: {
+        allowWrite: ["/app/src", "/app/dist"],  // Allowed write paths
+        denyWrite: ["/app/node_modules"],         // Denied write paths
+        denyRead: ["/app/.env"],                  // Denied read paths
+      },
+    },
+  },
+});
+```
 
 ## Limitations
 
