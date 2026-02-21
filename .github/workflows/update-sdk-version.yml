@@ -90,6 +90,29 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Compute SDK type diff
+        id: typediff
+        run: |
+          TMPDIR=$(mktemp -d)
+          OLD="${{ needs.check.outputs.current_version }}"
+          NEW="${{ needs.check.outputs.latest_version }}"
+
+          npm pack "@anthropic-ai/claude-agent-sdk@${OLD}" --pack-destination "$TMPDIR" 2>/dev/null
+          npm pack "@anthropic-ai/claude-agent-sdk@${NEW}" --pack-destination "$TMPDIR" 2>/dev/null
+
+          mkdir -p "$TMPDIR/old" "$TMPDIR/new"
+          tar xzf "$TMPDIR"/anthropic-ai-claude-agent-sdk-${OLD}.tgz -C "$TMPDIR/old" --strip-components=1
+          tar xzf "$TMPDIR"/anthropic-ai-claude-agent-sdk-${NEW}.tgz -C "$TMPDIR/new" --strip-components=1
+
+          diff "$TMPDIR/old/sdk.d.ts" "$TMPDIR/new/sdk.d.ts" > /tmp/sdk-type-diff.txt || true
+          rm -rf "$TMPDIR"
+
+          if [ -s /tmp/sdk-type-diff.txt ]; then
+            echo "has_api_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_api_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -103,15 +126,23 @@ jobs:
             The npm package `@anthropic-ai/claude-agent-sdk` has a new version.
             - **Current version in repo:** ${{ needs.check.outputs.current_version }}
             - **Latest version on npm:** ${{ needs.check.outputs.latest_version }}
+            - **API changes detected:** ${{ steps.typediff.outputs.has_api_changes }}
 
-            ### Step 1 — Research what changed (best-effort)
+            ### Step 1 — Research what changed
 
-            Try to find what changed between v${{ needs.check.outputs.current_version }} and v${{ needs.check.outputs.latest_version }}:
-            - Run: `npm view @anthropic-ai/claude-agent-sdk --json` for package metadata
-            - Try web search for release notes at https://github.com/anthropics/claude-code or npm
-            - Note any new APIs, changed signatures, new options, deprecations, or breaking changes
+            **Primary source (deterministic):** Read `/tmp/sdk-type-diff.txt` which contains a unified diff of `sdk.d.ts` between v${{ needs.check.outputs.current_version }} and v${{ needs.check.outputs.latest_version }}. This was pre-computed by `npm pack` + `diff` in a previous CI step.
 
-            If web search or npm access fails, skip this step and proceed with version-only updates.
+            Analyze every hunk in the diff and categorize each change:
+            - **New types/interfaces** (added exports)
+            - **New fields on existing types** (e.g., new options, new result fields)
+            - **Changed signatures** (parameter types, return types)
+            - **Removed/deprecated APIs** (deleted exports, removed fields)
+            - **New enum values or union members**
+
+            Keep a structured list of all changes — you will need it in Step 4.
+
+            **Secondary source (supplementary):** Try web search for human-readable release notes at https://github.com/anthropics/claude-code or npm. This may provide context about *why* changes were made. If web search fails, proceed with the diff analysis alone — it is complete and sufficient.
+
             Do NOT ask the user any questions — this runs unattended in CI.
 
             ### Step 2 — Update version strings (ALL 22 occurrences)
@@ -160,17 +191,33 @@ jobs:
             In `skills/claude-agent-sdk-ts/SKILL.md`, find the "Version History (Recent)" table:
             - Change existing `v${{ needs.check.outputs.current_version }} | Latest stable release` to a brief description of what that version contained (or keep as-is if unknown)
             - Add a new first row: `| v${{ needs.check.outputs.latest_version }} | Latest stable release |`
-            - If you found actual changelog info, use a real description instead of "Latest stable release"
+            - If you found actual changelog info in Step 1, use a real description instead of "Latest stable release"
 
-            ### Step 4 — Update content IF API changes found
+            ### Step 4 — Update content based on API changes
 
-            ONLY if Step 1 found concrete new APIs, changed signatures, new exports, or deprecations:
-            - Update relevant sections in SKILL.md
-            - Update affected templates in `templates/`
-            - Update affected references in `references/`
-            - Update rules in `rules/claude-agent-sdk-ts.md`
+            Use the categorized change list from Step 1 and the **Change Impact Mapping** below to determine exactly which files need content updates.
 
-            If NO API changes found, SKIP this step. Do NOT make speculative changes.
+            **Change Impact Mapping:**
+
+            | SDK Change | Files to Update |
+            |---|---|
+            | New hook event | `SKILL.md` §Hooks + `templates/hooks-example.ts` |
+            | New QueryOption field | `SKILL.md` §Options Reference + `references/query-api-reference.md` |
+            | New/changed PermissionMode | `SKILL.md` §Permission Modes + `references/permissions-guide.md` + `templates/permission-control.ts` |
+            | New QueryResult field | `SKILL.md` §QueryResult + `references/query-api-reference.md` |
+            | New SDKMessage type | `SKILL.md` §SDKMessage Types + `references/query-api-reference.md` |
+            | New ThinkingConfig type | `SKILL.md` §Options Reference + `references/query-api-reference.md` |
+            | New sandbox config | `SKILL.md` §Sandbox Settings + `references/permissions-guide.md` |
+            | Removed/deprecated API | `SKILL.md` relevant section + `references/known-issues.md` + `rules/claude-agent-sdk-ts.md` |
+            | New SDK export | `SKILL.md` §Core API + `rules/claude-agent-sdk-ts.md` imports |
+
+            For each change found:
+            - Add documentation for new types/options with version annotation (e.g., "(v${{ needs.check.outputs.latest_version }}+)")
+            - Add code examples in templates where appropriate
+            - Add to rules if it becomes a best practice or anti-pattern
+            - Mark deprecated/removed APIs in `references/known-issues.md`
+
+            If `/tmp/sdk-type-diff.txt` is empty (no API changes), SKIP this step entirely. Do NOT make speculative changes.
 
             ### Step 5 — Validate
 
@@ -201,7 +248,10 @@ jobs:
             git push origin "$BRANCH"
             ```
 
-            Then create the PR (use heredoc for body):
+            Then create the PR. Build the body dynamically based on whether API changes were found:
+
+            If API changes were found (`/tmp/sdk-type-diff.txt` is non-empty), include an `## API Changes` section listing each change categorized (New Types, New Fields, Changed Signatures, Removed/Deprecated). Otherwise state "Version bump only — no API changes detected."
+
             ```bash
             gh pr create \
               --title "feat: update claude-agent-sdk-ts to v${{ needs.check.outputs.latest_version }}" \
@@ -213,7 +263,14 @@ jobs:
             - Update `@anthropic-ai/claude-agent-sdk`: `${{ needs.check.outputs.current_version }}` → `${{ needs.check.outputs.latest_version }}`
             - Updated version strings across all skill files (22 occurrences)
             - Updated Version History table in SKILL.md
-            - [Describe any API/content changes here, or "No API changes detected"]
+
+            ## API Changes
+
+            [Insert categorized list of API changes from sdk.d.ts diff analysis, or "Version bump only — no API changes detected."]
+
+            ## Content Updates
+
+            [List which files were updated with new content beyond version strings, or "None — version bump only."]
 
             ## Type of Change
 
@@ -225,6 +282,8 @@ jobs:
             - [x] SKILL.md has required frontmatter
             - [x] plugin.json version matches marketplace.json
             - [x] All version references updated consistently
+            - [x] sdk.d.ts diff reviewed for API changes
+            - [x] Content updated to reflect new/changed/removed APIs
 
             ---
             🤖 Automated by [Claude Code](https://claude.ai/code) via GitHub Actions
