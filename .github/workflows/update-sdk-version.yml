@@ -94,10 +94,9 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: >-
-            --max-turns 25
+            --max-turns 50
             --model opus
-            --allowedTools
-            "Edit,Write,Read,Glob,Grep,WebSearch,WebFetch,Bash(npm view*),Bash(git *),Bash(gh pr *),Bash(python3 *),Bash(grep *)"
+            --dangerously-skip-permissions
           prompt: |
             ## Task: Update claude-agent-sdk-ts skill to v${{ needs.check.outputs.latest_version }}
 
