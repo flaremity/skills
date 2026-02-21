@@ -93,7 +93,11 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          claude_args: "--max-turns 25 --model claude-sonnet-4-20250514"
+          claude_args: >-
+            --max-turns 25
+            --model opus
+            --allowedTools
+            "Edit,Write,Read,Glob,Grep,WebSearch,WebFetch,Bash(npm view*),Bash(git *),Bash(gh pr *),Bash(python3 *),Bash(grep *)"
           prompt: |
             ## Task: Update claude-agent-sdk-ts skill to v${{ needs.check.outputs.latest_version }}
 
@@ -101,12 +105,15 @@ jobs:
             - **Current version in repo:** ${{ needs.check.outputs.current_version }}
             - **Latest version on npm:** ${{ needs.check.outputs.latest_version }}
 
-            ### Step 1 — Research what changed
+            ### Step 1 — Research what changed (best-effort)
 
-            Find what changed between v${{ needs.check.outputs.current_version }} and v${{ needs.check.outputs.latest_version }}:
+            Try to find what changed between v${{ needs.check.outputs.current_version }} and v${{ needs.check.outputs.latest_version }}:
             - Run: `npm view @anthropic-ai/claude-agent-sdk --json` for package metadata
-            - Web search for release notes at https://github.com/anthropics/claude-code or npm
+            - Try web search for release notes at https://github.com/anthropics/claude-code or npm
             - Note any new APIs, changed signatures, new options, deprecations, or breaking changes
+
+            If web search or npm access fails, skip this step and proceed with version-only updates.
+            Do NOT ask the user any questions — this runs unattended in CI.
 
             ### Step 2 — Update version strings (ALL 22 occurrences)
 
