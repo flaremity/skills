@@ -117,7 +117,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: >-
-            --max-turns 100
+            --max-turns 200
             --model opus
             --dangerously-skip-permissions
           prompt: |
@@ -127,6 +127,20 @@ jobs:
             - **Current version in repo:** ${{ needs.check.outputs.current_version }}
             - **Latest version on npm:** ${{ needs.check.outputs.latest_version }}
             - **API changes detected:** ${{ steps.typediff.outputs.has_api_changes }}
+
+            ### Execution Strategy — Use Sub-Agents for Parallelism
+
+            You MUST use the Task tool to spawn sub-agents for independent work. This dramatically reduces turns and wall-clock time.
+
+            **Parallel execution plan:**
+            1. Start Step 1 (research) yourself — read `/tmp/sdk-type-diff.txt` and analyze changes
+            2. While analyzing, spawn sub-agents in parallel for Step 2 version string updates:
+               - **Agent A** (subagent_type: "general-purpose"): Update all JSON manifests + Markdown docs (12 files)
+               - **Agent B** (subagent_type: "general-purpose"): Update all TypeScript templates + shell script (9 files)
+            3. After Step 1 analysis is complete AND agents A/B are done, do Step 3 (version history) and Step 4 (content updates) yourself — these require the change analysis
+            4. Do Step 5 (validate) and Step 6 (branch/commit/PR) yourself sequentially
+
+            When spawning sub-agents, give them the EXACT file list and the old/new version strings. They should read each file before editing.
 
             ### Step 1 — Research what changed
 
@@ -147,13 +161,11 @@ jobs:
 
             ### Step 2 — Update version strings (ALL 22 occurrences)
 
-            Read each file first, then replace `${{ needs.check.outputs.current_version }}` → `${{ needs.check.outputs.latest_version }}` in:
+            **Spawn two sub-agents in parallel** to handle this step. Each agent should read each file first, then replace `${{ needs.check.outputs.current_version }}` → `${{ needs.check.outputs.latest_version }}`.
 
-            **JSON manifests:**
+            **Agent A — JSON manifests + Markdown docs + dates (12 files):**
             - `skills/claude-agent-sdk-ts/.claude-plugin/plugin.json` (version field)
             - `.claude-plugin/marketplace.json` (version in plugins array)
-
-            **Markdown docs:**
             - `skills/claude-agent-sdk-ts/SKILL.md` line ~11 (package version)
             - `skills/claude-agent-sdk-ts/SKILL.md` last line (footer "SDK v...")
             - `skills/claude-agent-sdk-ts/README.md` line ~7 (SDK Version)
@@ -164,27 +176,22 @@ jobs:
             - `skills/claude-agent-sdk-ts/references/session-management.md` line 3
             - `skills/claude-agent-sdk-ts/references/mcp-servers-guide.md` line 3
             - `skills/claude-agent-sdk-ts/references/permissions-guide.md` line 3
+            - Also update "Last verified" date in SKILL.md line ~13 and "Last updated" date in known-issues.md line 3 to today (YYYY-MM-DD)
 
-            **Shell script:**
+            **Agent B — TypeScript templates + shell script (9 files):**
+            - `skills/claude-agent-sdk-ts/templates/basic-query.ts` (line 3 JSDoc)
+            - `skills/claude-agent-sdk-ts/templates/structured-output.ts` (line 3 JSDoc)
+            - `skills/claude-agent-sdk-ts/templates/error-handling.ts` (line 3 JSDoc)
+            - `skills/claude-agent-sdk-ts/templates/multi-agent-workflow.ts` (line 3 JSDoc)
+            - `skills/claude-agent-sdk-ts/templates/permission-control.ts` (line 3 JSDoc)
+            - `skills/claude-agent-sdk-ts/templates/custom-mcp-server.ts` (line 3 JSDoc)
+            - `skills/claude-agent-sdk-ts/templates/session-management.ts` (line 3 JSDoc)
+            - `skills/claude-agent-sdk-ts/templates/hooks-example.ts` (line 3 JSDoc)
             - `skills/claude-agent-sdk-ts/scripts/check-versions.sh` line 8 (CURRENT=)
-
-            **TypeScript templates (all line 3 JSDoc):**
-            - `skills/claude-agent-sdk-ts/templates/basic-query.ts`
-            - `skills/claude-agent-sdk-ts/templates/structured-output.ts`
-            - `skills/claude-agent-sdk-ts/templates/error-handling.ts`
-            - `skills/claude-agent-sdk-ts/templates/multi-agent-workflow.ts`
-            - `skills/claude-agent-sdk-ts/templates/permission-control.ts`
-            - `skills/claude-agent-sdk-ts/templates/custom-mcp-server.ts`
-            - `skills/claude-agent-sdk-ts/templates/session-management.ts`
-            - `skills/claude-agent-sdk-ts/templates/hooks-example.ts`
 
             **DO NOT touch these files (historical entries):**
             - `CHANGELOG.md`
             - `.github/ISSUE_TEMPLATE/bug_report.md`
-
-            **Also update dates:**
-            - `skills/claude-agent-sdk-ts/SKILL.md` line ~13: change "Last verified" date to today (YYYY-MM-DD)
-            - `skills/claude-agent-sdk-ts/references/known-issues.md` line 3: change "Last updated" date to today
 
             ### Step 3 — Update Version History table
 
