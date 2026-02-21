@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.44`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.50`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-02-17
+> **Last verified:** 2026-02-21
 
 ## Quick Start
 
@@ -163,6 +163,8 @@ await using resumed = unstable_v2_resumeSession(sessionId, { options });
 | `options.sandbox` | `SandboxSettings` | `undefined` | Sandbox configuration |
 | `options.additionalDirectories` | `string[]` | `[]` | Extra dirs for CLAUDE.md loading (added v0.2.19) |
 | `options.betaFeatures` | `string[]` | `[]` | Beta feature flags |
+| `options.thinking` | `ThinkingConfig` | `undefined` | Thinking/reasoning behavior: `{ type: 'adaptive' }`, `{ type: 'enabled', budgetTokens?: number }`, or `{ type: 'disabled' }` (v0.2.50+) |
+| `options.promptSuggestions` | `boolean` | `undefined` | Enable prompt suggestions after each turn (v0.2.50+) |
 | `options.hooks` | `HookConfig` | `undefined` | Event hook configuration |
 
 ### Permission Modes
@@ -463,6 +465,9 @@ Event hooks let you react to SDK lifecycle events. Added incrementally across ve
 | `SubagentStop` | v0.2.0 | Subagent stops |
 | `TeammateIdle` | v0.2.33 | Teammate goes idle |
 | `TaskCompleted` | v0.2.33 | Task marked complete |
+| `ConfigChange` | v0.2.50 | Configuration file changed (source: user/project/local/policy/skills) |
+| `WorktreeCreate` | v0.2.50 | Git worktree created |
+| `WorktreeRemove` | v0.2.50 | Git worktree removed |
 
 ### Hook Configuration
 
@@ -555,6 +560,11 @@ const q = query({
       mountPaths: ["/app"],               // Paths to mount
       maxMemory: "512m",
       maxCpus: 2,
+      filesystem: {                       // Filesystem restrictions (v0.2.50+)
+        allowWrite: ["/app/src"],         // Directories allowed for writes
+        denyWrite: ["/app/node_modules"], // Directories denied for writes
+        denyRead: ["/app/.env"],          // Directories denied for reads
+      },
     },
   },
 });
@@ -572,9 +582,12 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }             // System messages
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string }  // (v0.2.50+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
-  | { type: "progress"; progress: number; total?: number };
+  | { type: "progress"; progress: number; total?: number }
+  | { type: "rate_limit" }                          // Rate limit event (v0.2.50+)
+  | { type: "prompt_suggestion"; suggestion: string };  // Prompt suggestion (v0.2.50+)
 ```
 
 ### Filtering Messages
@@ -685,7 +698,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
-| v0.2.44 | Latest stable release |
+| v0.2.50 | New hook events (`ConfigChange`, `WorktreeCreate`, `WorktreeRemove`), `ThinkingConfig` types, `promptSuggestions` option, sandbox `filesystem` config, `SDKTaskStartedMessage`, removed `delegate` permission mode |
 | v0.2.33 | `TeammateIdle`/`TaskCompleted` hooks, custom `sessionId` |
 | v0.2.31 | `stop_reason` in QueryResult |
 | v0.2.30 | `debug`/`debugFile` options |
@@ -696,4 +709,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.44.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.50.*
