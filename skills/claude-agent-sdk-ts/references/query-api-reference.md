@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.50`
+> `@anthropic-ai/claude-agent-sdk@0.2.51`
 
 ## `query(options)` Function
 
@@ -143,7 +143,8 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }
-  | { type: "system"; subtype: "task_started"; task_id: string; description: string }  // (v0.2.50+)
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+)
+  | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; last_tool_name?: string }  // (v0.2.51+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
   | { type: "progress"; progress: number; total?: number }
@@ -162,7 +163,8 @@ type SDKMessage =
 | `error` | Error occurred | `error`, `code` (optional) |
 | `result` | Final structured output | `content` (JSON string), `sessionId` |
 | `progress` | Progress update | `progress`, `total` (optional) |
-| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `task_type` (optional) |
+| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `uuid`, `session_id` (v0.2.51+) |
+| `system` (subtype: `task_progress`) | Task progress update (v0.2.51+) | `task_id`, `description`, `usage` (`total_tokens`, `tool_uses`, `duration_ms`), `last_tool_name` |
 | `rate_limit` | Rate limit hit (v0.2.50+) | — |
 | `prompt_suggestion` | Suggested next prompt (v0.2.50+) | `suggestion` |
 
