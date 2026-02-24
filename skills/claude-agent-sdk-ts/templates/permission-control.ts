@@ -1,6 +1,6 @@
 /**
  * Permission control — canUseTool patterns
- * @anthropic-ai/claude-agent-sdk@0.2.51
+ * @anthropic-ai/claude-agent-sdk@0.2.52
  */
 import { query, type ToolUseDecision } from "@anthropic-ai/claude-agent-sdk";
 
