@@ -1,6 +1,6 @@
 # Session Management
 
-> `@anthropic-ai/claude-agent-sdk@0.2.51`
+> `@anthropic-ai/claude-agent-sdk@0.2.52`
 
 ## Overview
 

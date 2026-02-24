@@ -1,6 +1,6 @@
 {
   "name": "claude-agent-sdk-ts",
-  "version": "0.2.51",
+  "version": "0.2.52",
   "description": "TypeScript reference for @anthropic-ai/claude-agent-sdk — build AI agents with Claude Code",
   "author": {
     "name": "Flaremity"
