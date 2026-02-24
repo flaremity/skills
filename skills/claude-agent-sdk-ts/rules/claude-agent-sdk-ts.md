@@ -13,6 +13,7 @@ alwaysApply: false
 
 - **Correct import path:** `@anthropic-ai/claude-agent-sdk` (NOT `@anthropic-ai/claude-sdk` or `@anthropic-ai/sdk`)
 - **Named imports only:** Use `import { query, tool } from "@anthropic-ai/claude-agent-sdk"` (NOT default import)
+- **New in v0.2.52:** `SDKTaskProgressMessage` type export available for task progress tracking
 - **MCP SDK import:** `@modelcontextprotocol/sdk/server/mcp.js` (NOT `@modelcontextprotocol/server`)
 
 ## Tool Naming

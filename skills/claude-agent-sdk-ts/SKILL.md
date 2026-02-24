@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.50`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.52`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-02-21
+> **Last verified:** 2026-02-24
 
 ## Quick Start
 
@@ -319,6 +319,10 @@ await q.toggleMcpServer("my-tools", false); // disable
 await q.toggleMcpServer("my-tools", true);  // enable
 ```
 
+#### MCP Authentication (v0.2.52+)
+
+The SDK adds MCP server authentication support via `SDKControlMcpAuthenticateRequest` and `SDKControlMcpClearAuthRequest` control types, enabling credential management for remote MCP servers.
+
 ---
 
 ## Subagents
@@ -582,7 +586,8 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }             // System messages
-  | { type: "system"; subtype: "task_started"; task_id: string; description: string }  // (v0.2.50+)
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id added v0.2.52)
+  | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; tool_use_id?: string; last_tool_name?: string }  // (v0.2.52+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
   | { type: "progress"; progress: number; total?: number }
@@ -698,6 +703,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
+| v0.2.52 | `SDKTaskProgressMessage` type, MCP authentication controls (`SDKControlMcpAuthenticateRequest`, `SDKControlMcpClearAuthRequest`), new `uuid`/`session_id` fields on `SDKTaskStartedMessage` |
 | v0.2.50 | New hook events (`ConfigChange`, `WorktreeCreate`, `WorktreeRemove`), `ThinkingConfig` types, `promptSuggestions` option, sandbox `filesystem` config, `SDKTaskStartedMessage`, removed `delegate` permission mode |
 | v0.2.33 | `TeammateIdle`/`TaskCompleted` hooks, custom `sessionId` |
 | v0.2.31 | `stop_reason` in QueryResult |
@@ -709,4 +715,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.50.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.52.*

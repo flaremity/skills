@@ -1,6 +1,6 @@
 # MCP Servers Guide
 
-> `@anthropic-ai/claude-agent-sdk@0.2.50`
+> `@anthropic-ai/claude-agent-sdk@0.2.52`
 
 ## Overview
 
@@ -129,6 +129,10 @@ await q.toggleMcpServer("my-tools", false);
 // Re-enable
 await q.toggleMcpServer("my-tools", true);
 ```
+
+## MCP Authentication (v0.2.52+)
+
+The SDK now supports MCP server authentication and credential management via `SDKControlMcpAuthenticateRequest` and `SDKControlMcpClearAuthRequest` control types. These enable authenticating with remote MCP servers that require credentials and clearing stored authentication.
 
 ## Multiple Servers
 
