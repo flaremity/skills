@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.52`
+> `@anthropic-ai/claude-agent-sdk@0.2.55`
 
 ## `query(options)` Function
 
@@ -175,6 +175,40 @@ type ToolUseDecision =
   | { allowed: true }
   | { allowed: false; reason: string }
   | undefined;  // Defer to permission mode
+```
+
+## `listSessions()` Function (v0.2.55+)
+
+List sessions with metadata. Returns sessions for a project directory (and its git worktrees) or across all projects.
+
+```ts
+import { listSessions, type SDKSessionInfo, type ListSessionsOptions } from "@anthropic-ai/claude-agent-sdk";
+
+const sessions: SDKSessionInfo[] = await listSessions(options?: ListSessionsOptions);
+```
+
+### ListSessionsOptions
+
+```ts
+interface ListSessionsOptions {
+  dir?: string;    // Project directory to filter by (includes git worktrees). Omit for all projects.
+  limit?: number;  // Maximum number of sessions to return.
+}
+```
+
+### SDKSessionInfo
+
+```ts
+interface SDKSessionInfo {
+  sessionId: string;       // Unique session identifier (UUID)
+  summary: string;         // Display title: custom title, auto-generated summary, or first prompt
+  lastModified: number;    // Last modified time (ms since epoch)
+  fileSize: number;        // Session file size in bytes
+  customTitle?: string;    // User-set title via /rename
+  firstPrompt?: string;    // First meaningful user prompt
+  gitBranch?: string;      // Git branch at session end
+  cwd?: string;            // Working directory
+}
 ```
 
 ## `tool()` Helper

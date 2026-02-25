@@ -1,12 +1,14 @@
 /**
  * Session management — V1 resume + V2 multi-turn
- * @anthropic-ai/claude-agent-sdk@0.2.52
+ * @anthropic-ai/claude-agent-sdk@0.2.55
  */
 import {
   query,
+  listSessions,
   unstable_v2_createSession,
   unstable_v2_resumeSession,
 } from "@anthropic-ai/claude-agent-sdk";
+import type { SDKSessionInfo } from "@anthropic-ai/claude-agent-sdk";
 
 // V1: Resume a session
 async function v1SessionResume() {
@@ -72,6 +74,22 @@ async function v2Resume(sessionId: string) {
   }
 }
 
+// List sessions (v0.2.55+)
+async function listProjectSessions(projectDir: string) {
+  const sessions: SDKSessionInfo[] = await listSessions({
+    dir: projectDir,
+    limit: 10,
+  });
+
+  for (const session of sessions) {
+    const date = new Date(session.lastModified).toLocaleString();
+    console.log(`[${session.sessionId}] ${session.summary} (${date})`);
+    if (session.gitBranch) console.log(`  Branch: ${session.gitBranch}`);
+  }
+
+  return sessions;
+}
+
 // Run examples
 async function main() {
   console.log("=== V1 Session Resume ===\n");
@@ -79,6 +97,9 @@ async function main() {
 
   console.log("\n\n=== V2 Multi-Turn ===\n");
   await v2MultiTurn();
+
+  console.log("\n\n=== List Sessions ===\n");
+  await listProjectSessions(process.cwd());
 }
 
 main().catch(console.error);

@@ -1,6 +1,6 @@
 # Session Management
 
-> `@anthropic-ai/claude-agent-sdk@0.2.52`
+> `@anthropic-ai/claude-agent-sdk@0.2.55`
 
 ## Overview
 
@@ -117,6 +117,53 @@ try {
   await session[Symbol.asyncDispose]();
 }
 ```
+
+## Listing Sessions (v0.2.55+)
+
+Discover existing sessions programmatically.
+
+```ts
+import { listSessions, type SDKSessionInfo, type ListSessionsOptions } from "@anthropic-ai/claude-agent-sdk";
+
+// List sessions for a specific project directory (includes git worktrees)
+const sessions: SDKSessionInfo[] = await listSessions({ dir: '/path/to/project' });
+
+// List all sessions across all projects
+const allSessions = await listSessions();
+
+// Limit number of results
+const recent = await listSessions({ dir: '/path/to/project', limit: 5 });
+```
+
+### ListSessionsOptions
+
+```ts
+interface ListSessionsOptions {
+  dir?: string;    // Project directory (includes git worktrees). Omit for all projects.
+  limit?: number;  // Maximum number of sessions to return.
+}
+```
+
+### SDKSessionInfo
+
+```ts
+interface SDKSessionInfo {
+  sessionId: string;       // Unique session identifier (UUID)
+  summary: string;         // Display title: custom title, auto-generated summary, or first prompt
+  lastModified: number;    // Last modified time (ms since epoch)
+  fileSize: number;        // Session file size in bytes
+  customTitle?: string;    // User-set title via /rename
+  firstPrompt?: string;    // First meaningful user prompt
+  gitBranch?: string;      // Git branch at session end
+  cwd?: string;            // Working directory
+}
+```
+
+### Use Cases
+
+- **Session picker UI:** List sessions and let users choose which to resume
+- **Cleanup scripts:** Find old/large sessions for archival
+- **Multi-project dashboards:** Aggregate sessions across projects
 
 ## File Checkpointing
 
