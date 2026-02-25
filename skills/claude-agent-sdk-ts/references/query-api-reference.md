@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.55`
+> `@anthropic-ai/claude-agent-sdk@0.2.56`
 
 ## `query(options)` Function
 

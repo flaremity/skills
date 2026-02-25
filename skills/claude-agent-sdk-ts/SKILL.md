@@ -8,7 +8,7 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.55`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.56`
 > **Runtime:** Node.js 18+ / Bun 1.0+
 > **Last verified:** 2026-02-25
 
@@ -729,6 +729,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
+| v0.2.56 | Latest stable release |
 | v0.2.55 | `listSessions()` function, `ListSessionsOptions` type, `SDKSessionInfo` type for session discovery |
 | v0.2.52 | Maintenance release |
 | v0.2.51 | `SDKTaskProgressMessage` type, new fields on `SDKTaskStartedMessage` (`uuid`, `session_id`), MCP auth control requests |
@@ -743,4 +744,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.55.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.56.*

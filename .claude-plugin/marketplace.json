@@ -12,7 +12,7 @@
       "name": "claude-agent-sdk-ts",
       "source": "./skills/claude-agent-sdk-ts",
       "description": "TypeScript reference for @anthropic-ai/claude-agent-sdk — build AI agents with Claude Code",
-      "version": "0.2.55"
+      "version": "0.2.56"
     }
   ]
 }
