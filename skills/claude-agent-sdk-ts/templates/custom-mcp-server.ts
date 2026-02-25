@@ -1,6 +1,6 @@
 /**
  * In-process MCP server — zero network overhead
- * @anthropic-ai/claude-agent-sdk@0.2.52
+ * @anthropic-ai/claude-agent-sdk@0.2.55
  */
 import { query, createSdkMcpServer } from "@anthropic-ai/claude-agent-sdk";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";

@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.52`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.55`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-02-24
+> **Last verified:** 2026-02-25
 
 ## Quick Start
 
@@ -433,6 +433,36 @@ await using resumed = unstable_v2_resumeSession(session.sessionId, { options });
 for await (const msg of resumed.stream("Add --help flag")) { /* ... */ }
 ```
 
+### Listing Sessions (v0.2.55+)
+
+```ts
+import { listSessions, type SDKSessionInfo } from "@anthropic-ai/claude-agent-sdk";
+
+// List sessions for a specific project
+const sessions: SDKSessionInfo[] = await listSessions({ dir: '/path/to/project' });
+
+// List all sessions across all projects
+const allSessions = await listSessions();
+
+// Limit results
+const recentSessions = await listSessions({ dir: '/path/to/project', limit: 10 });
+```
+
+#### SDKSessionInfo
+
+```ts
+interface SDKSessionInfo {
+  sessionId: string;       // Unique session identifier (UUID)
+  summary: string;         // Display title: custom title, auto-generated summary, or first prompt
+  lastModified: number;    // Last modified time (ms since epoch)
+  fileSize: number;        // Session file size in bytes
+  customTitle?: string;    // User-set title via /rename
+  firstPrompt?: string;    // First meaningful user prompt
+  gitBranch?: string;      // Git branch at session end
+  cwd?: string;            // Working directory
+}
+```
+
 ### File Checkpointing
 
 ```ts
@@ -699,7 +729,8 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
-| v0.2.52 | Latest stable release |
+| v0.2.55 | `listSessions()` function, `ListSessionsOptions` type, `SDKSessionInfo` type for session discovery |
+| v0.2.52 | Maintenance release |
 | v0.2.51 | `SDKTaskProgressMessage` type, new fields on `SDKTaskStartedMessage` (`uuid`, `session_id`), MCP auth control requests |
 | v0.2.50 | New hook events (`ConfigChange`, `WorktreeCreate`, `WorktreeRemove`), `ThinkingConfig` types, `promptSuggestions` option, sandbox `filesystem` config, `SDKTaskStartedMessage`, removed `delegate` permission mode |
 | v0.2.33 | `TeammateIdle`/`TaskCompleted` hooks, custom `sessionId` |
@@ -712,4 +743,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.52.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.55.*
