@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.55`
+> `@anthropic-ai/claude-agent-sdk@0.2.59`
 
 ## `query(options)` Function
 
@@ -208,6 +208,38 @@ interface SDKSessionInfo {
   firstPrompt?: string;    // First meaningful user prompt
   gitBranch?: string;      // Git branch at session end
   cwd?: string;            // Working directory
+}
+```
+
+## `getSessionMessages()` Function (v0.2.59+)
+
+Read user/assistant messages from a session's JSONL transcript file.
+
+```ts
+import { getSessionMessages, type SessionMessage, type GetSessionMessagesOptions } from "@anthropic-ai/claude-agent-sdk";
+
+const messages: SessionMessage[] = await getSessionMessages(sessionId, options?: GetSessionMessagesOptions);
+```
+
+### GetSessionMessagesOptions
+
+```ts
+interface GetSessionMessagesOptions {
+  dir?: string;     // Project directory to find the session in. Omit to search all projects.
+  limit?: number;   // Maximum number of messages to return.
+  offset?: number;  // Number of messages to skip from the start.
+}
+```
+
+### SessionMessage
+
+```ts
+interface SessionMessage {
+  type: 'user' | 'assistant';   // Message role
+  uuid: string;                  // Unique message identifier
+  session_id: string;            // Session this message belongs to
+  message: unknown;              // Raw message content
+  parent_tool_use_id: null;      // Reserved for future use
 }
 ```
 

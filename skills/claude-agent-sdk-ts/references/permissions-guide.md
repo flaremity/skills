@@ -1,6 +1,6 @@
 # Permissions Guide
 
-> `@anthropic-ai/claude-agent-sdk@0.2.55`
+> `@anthropic-ai/claude-agent-sdk@0.2.59`
 
 ## Permission Modes
 
