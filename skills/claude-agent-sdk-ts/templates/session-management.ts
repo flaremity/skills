@@ -1,14 +1,15 @@
 /**
  * Session management — V1 resume + V2 multi-turn
- * @anthropic-ai/claude-agent-sdk@0.2.55
+ * @anthropic-ai/claude-agent-sdk@0.2.59
  */
 import {
   query,
   listSessions,
+  getSessionMessages,
   unstable_v2_createSession,
   unstable_v2_resumeSession,
 } from "@anthropic-ai/claude-agent-sdk";
-import type { SDKSessionInfo } from "@anthropic-ai/claude-agent-sdk";
+import type { SDKSessionInfo, SessionMessage } from "@anthropic-ai/claude-agent-sdk";
 
 // V1: Resume a session
 async function v1SessionResume() {
@@ -88,6 +89,20 @@ async function listProjectSessions(projectDir: string) {
   }
 
   return sessions;
+}
+
+// Read session messages (v0.2.59+)
+async function readSessionMessages(sessionId: string) {
+  const messages: SessionMessage[] = await getSessionMessages(sessionId, {
+    limit: 50,
+    offset: 0,
+  });
+
+  for (const msg of messages) {
+    console.log(`[${msg.type}] ${msg.uuid}`);
+  }
+
+  return messages;
 }
 
 // Run examples

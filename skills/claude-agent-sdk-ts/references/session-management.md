@@ -1,6 +1,6 @@
 # Session Management
 
-> `@anthropic-ai/claude-agent-sdk@0.2.55`
+> `@anthropic-ai/claude-agent-sdk@0.2.59`
 
 ## Overview
 
@@ -164,6 +164,53 @@ interface SDKSessionInfo {
 - **Session picker UI:** List sessions and let users choose which to resume
 - **Cleanup scripts:** Find old/large sessions for archival
 - **Multi-project dashboards:** Aggregate sessions across projects
+
+## Reading Session Messages (v0.2.59+)
+
+Read historical user/assistant messages from a session's JSONL transcript.
+
+```ts
+import { getSessionMessages, type SessionMessage, type GetSessionMessagesOptions } from "@anthropic-ai/claude-agent-sdk";
+
+// Read all messages from a session
+const messages: SessionMessage[] = await getSessionMessages(sessionId);
+
+// Read messages from a specific project directory
+const messages = await getSessionMessages(sessionId, { dir: '/path/to/project' });
+
+// Paginate through messages
+const firstPage = await getSessionMessages(sessionId, { limit: 20, offset: 0 });
+const secondPage = await getSessionMessages(sessionId, { limit: 20, offset: 20 });
+```
+
+### GetSessionMessagesOptions
+
+```ts
+interface GetSessionMessagesOptions {
+  dir?: string;     // Project directory to find the session in. Omit to search all projects.
+  limit?: number;   // Maximum number of messages to return.
+  offset?: number;  // Number of messages to skip from the start.
+}
+```
+
+### SessionMessage
+
+```ts
+interface SessionMessage {
+  type: 'user' | 'assistant';   // Message role
+  uuid: string;                  // Unique message identifier
+  session_id: string;            // Session this message belongs to
+  message: unknown;              // Raw message content
+  parent_tool_use_id: null;      // Reserved for future use
+}
+```
+
+### Use Cases
+
+- **Session replay:** Read and display past conversation history
+- **Analytics:** Analyze message patterns, token usage across sessions
+- **Export:** Convert session transcripts to other formats
+- **Quality review:** Review agent interactions for debugging or improvement
 
 ## File Checkpointing
 
