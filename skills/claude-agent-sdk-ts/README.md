@@ -4,7 +4,7 @@
 
 A comprehensive reference skill for developing TypeScript applications with [`@anthropic-ai/claude-agent-sdk`](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk).
 
-**SDK Version:** `0.2.59`
+**SDK Version:** `0.2.62`
 
 ## What's Included
 
@@ -88,7 +88,7 @@ for await (const message of q) {
 
 ## Credits
 
-Based on [jezweb/claude-skills](https://github.com/jezweb/claude-skills) (MIT License). Updated and expanded for SDK v0.2.59.
+Based on [jezweb/claude-skills](https://github.com/jezweb/claude-skills) (MIT License). Updated and expanded for SDK v0.2.62.
 
 ## License
 
