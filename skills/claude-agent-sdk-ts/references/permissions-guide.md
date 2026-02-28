@@ -1,6 +1,6 @@
 # Permissions Guide
 
-> `@anthropic-ai/claude-agent-sdk@0.2.59`
+> `@anthropic-ai/claude-agent-sdk@0.2.63`
 
 ## Permission Modes
 
@@ -151,6 +151,20 @@ query({
   },
 });
 ```
+
+## Sandbox Schema Change (v0.2.63+)
+
+Sandbox config schemas (`SandboxFilesystemConfigSchema`, `SandboxNetworkConfigSchema`, `SandboxSettingsSchema`) changed from direct Zod schema values to factory functions. If you access these schemas directly:
+
+```ts
+// Before v0.2.63
+const schema = SandboxSettingsSchema;
+
+// v0.2.63+
+const schema = SandboxSettingsSchema();  // Now a function call
+```
+
+The runtime `SandboxSettings`, `SandboxFilesystemConfig`, and `SandboxNetworkConfig` types are unchanged — this only affects code that directly references the schema objects.
 
 ## Limitations
 

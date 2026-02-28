@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.59`
+> `@anthropic-ai/claude-agent-sdk@0.2.63`
 
 ## `query(options)` Function
 
@@ -77,6 +77,9 @@ interface QueryOptions {
 
   // Hooks
   hooks?: HookConfig;
+
+  // MCP Elicitation (v0.2.63+)
+  onElicitation?: OnElicitation;              // Callback for MCP elicitation requests
 }
 ```
 
@@ -118,6 +121,18 @@ Changes the model mid-query.
 
 Closes the query and frees all resources. Always call this in a `finally` block if not using `for await`.
 
+### `q.supportedAgents(): Promise<AgentInfo[]>` (v0.2.63+)
+
+Returns the list of available subagents for the current session.
+
+```ts
+interface AgentInfo {
+  name: string;          // Agent type identifier (e.g., "Explore")
+  description: string;   // When to use this agent
+  model?: string;        // Model alias (inherits parent if omitted)
+}
+```
+
 ### `q.reconnectMcpServer(name: string): Promise<void>` (v0.2.21+)
 
 Reconnects a disconnected MCP server by name.
@@ -148,7 +163,9 @@ type SDKMessage =
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
   | { type: "progress"; progress: number; total?: number }
-  | { type: "rate_limit" }                          // Rate limit event (v0.2.50+)
+  | { type: "system"; subtype: "local_command_output"; content: string }  // Local slash command output (v0.2.63+)
+  | { type: "system"; subtype: "elicitation_complete"; mcp_server_name: string; elicitation_id: string }  // MCP elicitation completed (v0.2.63+)
+  | { type: "rate_limit_event"; rate_limit_info: SDKRateLimitInfo }  // Rate limit event with details (v0.2.63+)
   | { type: "prompt_suggestion"; suggestion: string };  // Prompt suggestion (v0.2.50+)
 ```
 
@@ -165,7 +182,9 @@ type SDKMessage =
 | `progress` | Progress update | `progress`, `total` (optional) |
 | `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `uuid`, `session_id` (v0.2.51+) |
 | `system` (subtype: `task_progress`) | Task progress update (v0.2.51+) | `task_id`, `description`, `usage` (`total_tokens`, `tool_uses`, `duration_ms`), `last_tool_name` |
-| `rate_limit` | Rate limit hit (v0.2.50+) | — |
+| `system` (subtype: `local_command_output`) | Local slash command output (v0.2.63+) | `content` |
+| `system` (subtype: `elicitation_complete`) | MCP elicitation completed (v0.2.63+) | `mcp_server_name`, `elicitation_id` |
+| `rate_limit_event` | Rate limit info changed (v0.2.63+) | `rate_limit_info` (`SDKRateLimitInfo`) |
 | `prompt_suggestion` | Suggested next prompt (v0.2.50+) | `suggestion` |
 
 ## ToolUseDecision Type
@@ -242,6 +261,55 @@ interface SessionMessage {
   parent_tool_use_id: null;      // Reserved for future use
 }
 ```
+
+## `OnElicitation` Callback Type (v0.2.63+)
+
+Called when an MCP server requests user input and no hook handles it. If not provided, elicitation requests are declined automatically.
+
+```ts
+type OnElicitation = (
+  request: ElicitationRequest,
+  options: { signal: AbortSignal }
+) => Promise<ElicitationResult>;
+
+interface ElicitationRequest {
+  serverName: string;                          // MCP server requesting elicitation
+  message: string;                             // Message to display to the user
+  mode?: 'form' | 'url';                       // 'form' for structured input, 'url' for browser auth
+  url?: string;                                // URL to open (only for 'url' mode)
+  elicitationId?: string;                      // Correlation ID for URL elicitations
+  requestedSchema?: Record<string, unknown>;   // JSON Schema for input (only for 'form' mode)
+}
+
+// ElicitationResult is re-exported from @modelcontextprotocol/sdk
+// Common response: { action: 'accept', content: { ... } } | { action: 'decline' } | { action: 'cancel' }
+```
+
+## `SDKRateLimitInfo` Type (v0.2.63+)
+
+Rate limit information for claude.ai subscription users.
+
+```ts
+interface SDKRateLimitInfo {
+  status: 'allowed' | 'allowed_warning' | 'rejected';
+  resetsAt?: number;
+  rateLimitType?: 'five_hour' | 'seven_day' | 'seven_day_opus' | 'seven_day_sonnet' | 'overage';
+  utilization?: number;
+  overageStatus?: 'allowed' | 'allowed_warning' | 'rejected';
+  overageResetsAt?: number;
+  overageDisabledReason?: string;
+  isUsingOverage?: boolean;
+  surpassedThreshold?: number;
+}
+```
+
+## `FastModeState` Type (v0.2.63+)
+
+```ts
+type FastModeState = 'off' | 'cooldown' | 'on';
+```
+
+Present as optional `fast_mode_state` field on `SDKStatusMessage` and `SDKResultMessage`.
 
 ## `tool()` Helper
 

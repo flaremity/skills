@@ -1,6 +1,6 @@
 # Session Management
 
-> `@anthropic-ai/claude-agent-sdk@0.2.59`
+> `@anthropic-ai/claude-agent-sdk@0.2.63`
 
 ## Overview
 
@@ -211,6 +211,31 @@ interface SessionMessage {
 - **Analytics:** Analyze message patterns, token usage across sessions
 - **Export:** Convert session transcripts to other formats
 - **Quality review:** Review agent interactions for debugging or improvement
+
+## Querying Available Agents (v0.2.63+)
+
+List available subagents for the current session.
+
+```ts
+import { type AgentInfo } from "@anthropic-ai/claude-agent-sdk";
+
+const q = query({ prompt: "Do the task", options });
+const agents: AgentInfo[] = await q.supportedAgents();
+
+for (const agent of agents) {
+  console.log(`${agent.name}: ${agent.description} (model: ${agent.model ?? "inherited"})`);
+}
+```
+
+### AgentInfo
+
+```ts
+interface AgentInfo {
+  name: string;          // Agent type identifier (e.g., "Explore")
+  description: string;   // When to use this agent
+  model?: string;        // Model alias (inherits parent if omitted)
+}
+```
 
 ## File Checkpointing
 
