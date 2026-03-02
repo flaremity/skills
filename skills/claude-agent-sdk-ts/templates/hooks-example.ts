@@ -1,6 +1,6 @@
 /**
  * Hook events — react to SDK lifecycle events
- * @anthropic-ai/claude-agent-sdk@0.2.59
+ * @anthropic-ai/claude-agent-sdk@0.2.63
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
 
@@ -80,6 +80,34 @@ async function main() {
           {
             handler: async (event) => {
               console.log(`[ConfigChange] Source: ${event.source}, File: ${event.file_path ?? "N/A"}`);
+            },
+          },
+        ],
+
+        // v0.2.63+: React to MCP elicitation requests
+        Elicitation: [
+          {
+            handler: async (event) => {
+              console.log(
+                `[Elicitation] Server: ${event.mcp_server_name}, Mode: ${event.mode ?? "form"}`
+              );
+              console.log(`  Message: ${event.message}`);
+              if (event.url) {
+                console.log(`  URL: ${event.url}`);
+              }
+              // Return action to accept, decline, or cancel
+              // return { hookSpecificOutput: { hookEventName: 'Elicitation', action: 'accept', content: { name: 'Test' } } };
+            },
+          },
+        ],
+
+        // v0.2.63+: React to elicitation results
+        ElicitationResult: [
+          {
+            handler: async (event) => {
+              console.log(
+                `[ElicitationResult] Server: ${event.mcp_server_name}, Action: ${event.action}`
+              );
             },
           },
         ],

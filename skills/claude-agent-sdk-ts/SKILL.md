@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.59`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.63`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-02-26
+> **Last verified:** 2026-02-28
 
 ## Quick Start
 
@@ -63,6 +63,7 @@ const result = await q.result; // Final result after iteration
 
 | Method | Description |
 |--------|-------------|
+| `q.supportedAgents()` | `Promise<AgentInfo[]>` — list available subagents (v0.2.63+) |
 | `q.result` | `Promise<QueryResult>` — final result after generator completes |
 | `q.interrupt()` | Interrupt current generation |
 | `q.rewindFiles()` | Revert file changes to pre-query state |
@@ -166,6 +167,7 @@ await using resumed = unstable_v2_resumeSession(sessionId, { options });
 | `options.thinking` | `ThinkingConfig` | `undefined` | Thinking/reasoning behavior: `{ type: 'adaptive' }`, `{ type: 'enabled', budgetTokens?: number }`, or `{ type: 'disabled' }` (v0.2.50+) |
 | `options.promptSuggestions` | `boolean` | `undefined` | Enable prompt suggestions after each turn (v0.2.50+) |
 | `options.hooks` | `HookConfig` | `undefined` | Event hook configuration |
+| `options.onElicitation` | `OnElicitation` | `undefined` | Callback for MCP elicitation requests — called when an MCP server requests user input and no hook handles it (v0.2.63+) |
 
 ### Permission Modes
 
@@ -358,6 +360,18 @@ const q = query({
 });
 ```
 
+### AgentInfo Type (v0.2.63+)
+
+Returned by `q.supportedAgents()` — describes available subagents for the current session.
+
+```ts
+interface AgentInfo {
+  name: string;          // Agent type identifier (e.g., "Explore")
+  description: string;   // When to use this agent
+  model?: string;        // Model alias (inherits parent if omitted)
+}
+```
+
 ### AgentDefinition Type
 
 ```ts
@@ -524,6 +538,8 @@ Event hooks let you react to SDK lifecycle events. Added incrementally across ve
 | `SubagentStop` | v0.2.0 | Subagent stops |
 | `TeammateIdle` | v0.2.33 | Teammate goes idle |
 | `TaskCompleted` | v0.2.33 | Task marked complete |
+| `Elicitation` | v0.2.63 | MCP server requests user input (form or URL auth) |
+| `ElicitationResult` | v0.2.63 | Elicitation response sent back to MCP server |
 | `ConfigChange` | v0.2.50 | Configuration file changed (source: user/project/local/policy/skills) |
 | `WorktreeCreate` | v0.2.50 | Git worktree created |
 | `WorktreeRemove` | v0.2.50 | Git worktree removed |
@@ -629,6 +645,8 @@ const q = query({
 });
 ```
 
+**Note (v0.2.63+):** Sandbox config schemas (`SandboxSettingsSchema`, `SandboxFilesystemConfigSchema`, `SandboxNetworkConfigSchema`) are now factory functions — call `SandboxSettingsSchema()` instead of using them directly.
+
 ---
 
 ## SDKMessage Types
@@ -646,7 +664,9 @@ type SDKMessage =
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
   | { type: "progress"; progress: number; total?: number }
-  | { type: "rate_limit" }                          // Rate limit event (v0.2.50+)
+  | { type: "system"; subtype: "local_command_output"; content: string }  // Local slash command output (v0.2.63+)
+  | { type: "system"; subtype: "elicitation_complete"; mcp_server_name: string; elicitation_id: string }  // MCP elicitation completed (v0.2.63+)
+  | { type: "rate_limit_event"; rate_limit_info: SDKRateLimitInfo }  // Rate limit event with details (v0.2.63+)
   | { type: "prompt_suggestion"; suggestion: string };  // Prompt suggestion (v0.2.50+)
 ```
 
@@ -758,6 +778,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
+| v0.2.63 | MCP elicitation support (`onElicitation` callback, `ElicitationRequest`/`ElicitationResult` types), `Elicitation`/`ElicitationResult` hook events, `AgentInfo` type + `supportedAgents()` method, `FastModeState` type, `SDKLocalCommandOutputMessage`/`SDKElicitationCompleteMessage` message types, `SDKRateLimitInfo` type, sandbox schemas changed to factory functions |
 | v0.2.59 | `getSessionMessages()` function, `GetSessionMessagesOptions` type, `SessionMessage` type for reading session transcripts |
 | v0.2.55 | `listSessions()` function, `ListSessionsOptions` type, `SDKSessionInfo` type for session discovery |
 | v0.2.52 | Maintenance release |
@@ -773,4 +794,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.59.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.63.*
