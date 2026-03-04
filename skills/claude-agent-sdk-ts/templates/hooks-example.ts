@@ -1,6 +1,6 @@
 /**
  * Hook events — react to SDK lifecycle events
- * @anthropic-ai/claude-agent-sdk@0.2.63
+ * @anthropic-ai/claude-agent-sdk@0.2.66
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
 

@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.63`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.66`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-02-28
+> **Last verified:** 2026-03-04
 
 ## Quick Start
 
@@ -778,6 +778,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
+| v0.2.66 | Maintenance release |
 | v0.2.63 | MCP elicitation support (`onElicitation` callback, `ElicitationRequest`/`ElicitationResult` types), `Elicitation`/`ElicitationResult` hook events, `AgentInfo` type + `supportedAgents()` method, `FastModeState` type, `SDKLocalCommandOutputMessage`/`SDKElicitationCompleteMessage` message types, `SDKRateLimitInfo` type, sandbox schemas changed to factory functions |
 | v0.2.59 | `getSessionMessages()` function, `GetSessionMessagesOptions` type, `SessionMessage` type for reading session transcripts |
 | v0.2.55 | `listSessions()` function, `ListSessionsOptions` type, `SDKSessionInfo` type for session discovery |
@@ -794,4 +795,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.63.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.66.*
