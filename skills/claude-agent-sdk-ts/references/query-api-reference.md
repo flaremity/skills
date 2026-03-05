@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.68`
+> `@anthropic-ai/claude-agent-sdk@0.2.69`
 
 ## `query(options)` Function
 
@@ -77,6 +77,12 @@ interface QueryOptions {
 
   // Hooks
   hooks?: HookConfig;
+
+  // Per-tool configuration (v0.2.69+)
+  toolConfig?: ToolConfig;                    // Per-tool config (e.g., askUserQuestion preview format)
+
+  // Settings override (v0.2.69+)
+  settings?: string | Settings;              // Settings path or object (highest priority "flag settings" layer)
 
   // MCP Elicitation (v0.2.63+)
   onElicitation?: OnElicitation;              // Callback for MCP elicitation requests
@@ -210,8 +216,9 @@ const sessions: SDKSessionInfo[] = await listSessions(options?: ListSessionsOpti
 
 ```ts
 interface ListSessionsOptions {
-  dir?: string;    // Project directory to filter by (includes git worktrees). Omit for all projects.
-  limit?: number;  // Maximum number of sessions to return.
+  dir?: string;              // Project directory to filter by. Omit for all projects.
+  limit?: number;            // Maximum number of sessions to return.
+  includeWorktrees?: boolean; // Include git worktree sessions when dir is set (default: true) (v0.2.69+)
 }
 ```
 
@@ -310,6 +317,36 @@ type FastModeState = 'off' | 'cooldown' | 'on';
 ```
 
 Present as optional `fast_mode_state` field on `SDKStatusMessage` and `SDKResultMessage`.
+
+## `ToolConfig` Type (v0.2.69+)
+
+Per-tool configuration for built-in tools.
+
+```ts
+type ToolConfig = {
+  askUserQuestion?: {
+    previewFormat?: 'markdown' | 'html';  // Content format for question option previews (default: 'markdown')
+  };
+};
+```
+
+## `InstructionsLoadedHookInput` Type (v0.2.69+)
+
+Hook input for the `InstructionsLoaded` event, fired when CLAUDE.md or instructions files are loaded.
+
+```ts
+type InstructionsLoadedHookInput = BaseHookInput & {
+  hook_event_name: 'InstructionsLoaded';
+  file_path: string;                                              // Path to the instructions file
+  memory_type: 'User' | 'Project' | 'Local' | 'Managed';        // Source of the instructions
+  load_reason: 'session_start' | 'nested_traversal' | 'path_glob_match' | 'include';
+  globs?: string[];               // Glob patterns that triggered loading (for path_glob_match)
+  trigger_file_path?: string;     // File that triggered this load
+  parent_file_path?: string;      // Parent file (for include/nested loads)
+};
+```
+
+**Note (v0.2.69+):** All hook inputs now include optional `agent_id` and `agent_type` fields to identify subagent context.
 
 ## `tool()` Helper
 

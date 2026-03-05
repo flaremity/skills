@@ -1,6 +1,6 @@
 # Known Issues & Workarounds
 
-> `@anthropic-ai/claude-agent-sdk@0.2.68` — Last updated: 2026-03-04
+> `@anthropic-ai/claude-agent-sdk@0.2.69` — Last updated: 2026-03-05
 
 ## Active Issues
 

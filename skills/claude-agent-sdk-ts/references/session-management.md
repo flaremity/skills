@@ -1,6 +1,6 @@
 # Session Management
 
-> `@anthropic-ai/claude-agent-sdk@0.2.68`
+> `@anthropic-ai/claude-agent-sdk@0.2.69`
 
 ## Overview
 
@@ -139,8 +139,9 @@ const recent = await listSessions({ dir: '/path/to/project', limit: 5 });
 
 ```ts
 interface ListSessionsOptions {
-  dir?: string;    // Project directory (includes git worktrees). Omit for all projects.
-  limit?: number;  // Maximum number of sessions to return.
+  dir?: string;              // Project directory. Omit for all projects.
+  limit?: number;            // Maximum number of sessions to return.
+  includeWorktrees?: boolean; // Include git worktree sessions when dir is set (default: true) (v0.2.69+)
 }
 ```
 

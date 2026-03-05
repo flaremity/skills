@@ -1,6 +1,6 @@
 # MCP Servers Guide
 
-> `@anthropic-ai/claude-agent-sdk@0.2.68`
+> `@anthropic-ai/claude-agent-sdk@0.2.69`
 
 ## Overview
 

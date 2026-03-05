@@ -1,6 +1,6 @@
 /**
  * Hook events — react to SDK lifecycle events
- * @anthropic-ai/claude-agent-sdk@0.2.68
+ * @anthropic-ai/claude-agent-sdk@0.2.69
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
 
@@ -108,6 +108,20 @@ async function main() {
               console.log(
                 `[ElicitationResult] Server: ${event.mcp_server_name}, Action: ${event.action}`
               );
+            },
+          },
+        ],
+
+        // v0.2.69+: React to instructions/CLAUDE.md file loading
+        InstructionsLoaded: [
+          {
+            handler: async (event) => {
+              console.log(
+                `[InstructionsLoaded] File: ${event.file_path}, Type: ${event.memory_type}, Reason: ${event.load_reason}`
+              );
+              if (event.agent_id) {
+                console.log(`  From subagent: ${event.agent_id} (${event.agent_type})`);
+              }
             },
           },
         ],
