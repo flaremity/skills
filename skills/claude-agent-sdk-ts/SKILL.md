@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.68`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.70`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-03-04
+> **Last verified:** 2026-03-06
 
 ## Quick Start
 
@@ -168,6 +168,8 @@ await using resumed = unstable_v2_resumeSession(sessionId, { options });
 | `options.promptSuggestions` | `boolean` | `undefined` | Enable prompt suggestions after each turn (v0.2.50+) |
 | `options.hooks` | `HookConfig` | `undefined` | Event hook configuration |
 | `options.onElicitation` | `OnElicitation` | `undefined` | Callback for MCP elicitation requests — called when an MCP server requests user input and no hook handles it (v0.2.63+) |
+| `options.toolConfig` | `ToolConfig` | `undefined` | Per-tool configuration for built-in tools, e.g. `{ askUserQuestion: { previewFormat: 'html' } }` (v0.2.70+) |
+| `options.settings` | `string \| Settings` | `undefined` | Additional settings (path to JSON or object) — loaded as highest-priority "flag settings" layer (v0.2.70+) |
 
 ### Permission Modes
 
@@ -460,6 +462,9 @@ const allSessions = await listSessions();
 
 // Limit results
 const recentSessions = await listSessions({ dir: '/path/to/project', limit: 10 });
+
+// Exclude git worktree sessions (v0.2.70+)
+const noWorktrees = await listSessions({ dir: '/path/to/project', includeWorktrees: false });
 ```
 
 #### SDKSessionInfo
@@ -543,6 +548,7 @@ Event hooks let you react to SDK lifecycle events. Added incrementally across ve
 | `ConfigChange` | v0.2.50 | Configuration file changed (source: user/project/local/policy/skills) |
 | `WorktreeCreate` | v0.2.50 | Git worktree created |
 | `WorktreeRemove` | v0.2.50 | Git worktree removed |
+| `InstructionsLoaded` | v0.2.70 | CLAUDE.md / memory file loaded (includes `file_path`, `memory_type`, `load_reason`) |
 
 ### Hook Configuration
 
@@ -778,7 +784,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
-| v0.2.68 | Maintenance release |
+| v0.2.70 | `InstructionsLoaded` hook event, `agent_id`/`agent_type` on hook inputs, `toolConfig` + `settings` query options, `includeWorktrees` on `listSessions`, exported `Settings` and `ToolConfig` types, `SDKControlGetSettingsRequest`, `priority` field on task messages, `enableWeakerNetworkIsolation` sandbox option, `supportsFastMode` model field |
 | v0.2.63 | MCP elicitation support (`onElicitation` callback, `ElicitationRequest`/`ElicitationResult` types), `Elicitation`/`ElicitationResult` hook events, `AgentInfo` type + `supportedAgents()` method, `FastModeState` type, `SDKLocalCommandOutputMessage`/`SDKElicitationCompleteMessage` message types, `SDKRateLimitInfo` type, sandbox schemas changed to factory functions |
 | v0.2.59 | `getSessionMessages()` function, `GetSessionMessagesOptions` type, `SessionMessage` type for reading session transcripts |
 | v0.2.55 | `listSessions()` function, `ListSessionsOptions` type, `SDKSessionInfo` type for session discovery |
@@ -795,4 +801,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.68.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.70.*

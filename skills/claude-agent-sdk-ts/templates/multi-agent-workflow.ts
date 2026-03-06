@@ -1,6 +1,6 @@
 /**
  * Multi-agent workflow — orchestrate subagents
- * @anthropic-ai/claude-agent-sdk@0.2.68
+ * @anthropic-ai/claude-agent-sdk@0.2.70
  */
 import { query, tool, type AgentDefinition } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod";

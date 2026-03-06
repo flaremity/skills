@@ -1,6 +1,6 @@
 # Permissions Guide
 
-> `@anthropic-ai/claude-agent-sdk@0.2.68`
+> `@anthropic-ai/claude-agent-sdk@0.2.70`
 
 ## Permission Modes
 
@@ -150,6 +150,17 @@ query({
     },
   },
 });
+```
+
+### Weaker Network Isolation (v0.2.70+)
+
+macOS only: allow access to `com.apple.trustd.agent` in the sandbox. Needed for Go-based CLI tools (`gh`, `gcloud`, `terraform`, etc.) to verify TLS certificates when using `httpProxyPort` with a MITM proxy and custom CA. **Reduces security** — opens a potential data exfiltration vector through the trustd service.
+
+```ts
+sandbox: {
+  // ...
+  enableWeakerNetworkIsolation: true,  // Default: false
+}
 ```
 
 ## Sandbox Schema Change (v0.2.63+)

@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.68`
+> `@anthropic-ai/claude-agent-sdk@0.2.70`
 
 ## `query(options)` Function
 
@@ -80,6 +80,12 @@ interface QueryOptions {
 
   // MCP Elicitation (v0.2.63+)
   onElicitation?: OnElicitation;              // Callback for MCP elicitation requests
+
+  // Per-tool configuration (v0.2.70+)
+  toolConfig?: ToolConfig;                    // e.g. { askUserQuestion: { previewFormat: 'html' } }
+
+  // Settings override (v0.2.70+)
+  settings?: string | Settings;              // Path to settings JSON or inline settings object (highest priority)
 }
 ```
 
@@ -210,8 +216,9 @@ const sessions: SDKSessionInfo[] = await listSessions(options?: ListSessionsOpti
 
 ```ts
 interface ListSessionsOptions {
-  dir?: string;    // Project directory to filter by (includes git worktrees). Omit for all projects.
-  limit?: number;  // Maximum number of sessions to return.
+  dir?: string;              // Project directory to filter by (includes git worktrees). Omit for all projects.
+  limit?: number;            // Maximum number of sessions to return.
+  includeWorktrees?: boolean; // Include sessions from git worktree paths when dir is set. Default: true. (v0.2.70+)
 }
 ```
 
@@ -310,6 +317,46 @@ type FastModeState = 'off' | 'cooldown' | 'on';
 ```
 
 Present as optional `fast_mode_state` field on `SDKStatusMessage` and `SDKResultMessage`.
+
+## `ToolConfig` Type (v0.2.70+)
+
+Per-tool configuration for built-in tools. Allows SDK consumers to customize tool behavior.
+
+```ts
+type ToolConfig = {
+  askUserQuestion?: {
+    /** Content format for the preview field on question options.
+     *  'markdown' (default) — Markdown/ASCII content
+     *  'html' — Self-contained HTML fragments (for web-based SDK consumers) */
+    previewFormat?: 'markdown' | 'html';
+  };
+};
+```
+
+## `Settings` Type (v0.2.70+)
+
+Full settings interface exported from the SDK. Can be passed inline to `query()` via `options.settings` or loaded from a JSON file path.
+
+```ts
+import { query, type Settings } from "@anthropic-ai/claude-agent-sdk";
+
+// Inline settings object
+const q = query({
+  prompt: "Do the task",
+  options: {
+    settings: {
+      model: 'claude-sonnet-4-6',
+      permissions: { allow: ['Bash(*)'] },
+    } satisfies Settings,
+  },
+});
+
+// Or path to settings file
+const q2 = query({
+  prompt: "Do the task",
+  options: { settings: '/path/to/settings.json' },
+});
+```
 
 ## `tool()` Helper
 
