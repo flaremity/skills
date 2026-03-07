@@ -1,6 +1,6 @@
 /**
  * Session management — V1 resume + V2 multi-turn
- * @anthropic-ai/claude-agent-sdk@0.2.70
+ * @anthropic-ai/claude-agent-sdk@0.2.71
  */
 import {
   query,
