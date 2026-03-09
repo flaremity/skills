@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.70`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.71`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-03-06
+> **Last verified:** 2026-03-07
 
 ## Quick Start
 
@@ -665,7 +665,7 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }             // System messages
-  | { type: "system"; subtype: "task_started"; task_id: string; description: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+)
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.71+)
   | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; last_tool_name?: string }  // (v0.2.51+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
@@ -784,6 +784,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
+| v0.2.71 | `prompt` field on `SDKTaskStartedMessage` — includes the prompt given to a task/subagent |
 | v0.2.70 | `InstructionsLoaded` hook event, `agent_id`/`agent_type` on hook inputs, `toolConfig` + `settings` query options, `includeWorktrees` on `listSessions`, exported `Settings` and `ToolConfig` types, `SDKControlGetSettingsRequest`, `priority` field on task messages, `enableWeakerNetworkIsolation` sandbox option, `supportsFastMode` model field |
 | v0.2.63 | MCP elicitation support (`onElicitation` callback, `ElicitationRequest`/`ElicitationResult` types), `Elicitation`/`ElicitationResult` hook events, `AgentInfo` type + `supportedAgents()` method, `FastModeState` type, `SDKLocalCommandOutputMessage`/`SDKElicitationCompleteMessage` message types, `SDKRateLimitInfo` type, sandbox schemas changed to factory functions |
 | v0.2.59 | `getSessionMessages()` function, `GetSessionMessagesOptions` type, `SessionMessage` type for reading session transcripts |
@@ -801,4 +802,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.70.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.71.*
