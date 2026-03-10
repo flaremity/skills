@@ -189,7 +189,7 @@ type SDKMessage =
 | `error` | Error occurred | `error`, `code` (optional) |
 | `result` | Final structured output | `content` (JSON string), `sessionId` |
 | `progress` | Progress update | `progress`, `total` (optional) |
-| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `prompt` (v0.2.72+), `uuid`, `session_id` (v0.2.51+) |
+| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `prompt` (v0.2.71+), `uuid`, `session_id` (v0.2.51+) |
 | `system` (subtype: `task_progress`) | Task progress update (v0.2.51+) | `task_id`, `description`, `usage` (`total_tokens`, `tool_uses`, `duration_ms`), `last_tool_name`, `summary` (v0.2.72+) |
 | `system` (subtype: `local_command_output`) | Local slash command output (v0.2.63+) | `content` |
 | `system` (subtype: `elicitation_complete`) | MCP elicitation completed (v0.2.63+) | `mcp_server_name`, `elicitation_id` |
