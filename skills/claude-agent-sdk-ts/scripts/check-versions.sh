@@ -5,7 +5,7 @@
 set -euo pipefail
 
 PACKAGE="@anthropic-ai/claude-agent-sdk"
-CURRENT="0.2.71"
+CURRENT="0.2.72"
 
 echo "Checking latest version of ${PACKAGE}..."
 
