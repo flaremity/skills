@@ -1,6 +1,6 @@
 # Session Management
 
-> `@anthropic-ai/claude-agent-sdk@0.2.71`
+> `@anthropic-ai/claude-agent-sdk@0.2.74`
 
 ## Overview
 
@@ -164,6 +164,30 @@ interface SDKSessionInfo {
 - **Session picker UI:** List sessions and let users choose which to resume
 - **Cleanup scripts:** Find old/large sessions for archival
 - **Multi-project dashboards:** Aggregate sessions across projects
+
+## Renaming Sessions (v0.2.74+)
+
+Rename a session by appending a custom-title entry to its JSONL file.
+
+```ts
+import { renameSession, type SessionMutationOptions } from "@anthropic-ai/claude-agent-sdk";
+
+// Rename a session
+await renameSession(sessionId, "My new title");
+
+// Specify project directory to narrow the search
+await renameSession(sessionId, "My new title", { dir: '/path/to/project' });
+```
+
+### SessionMutationOptions
+
+Options shared by session mutation functions (`renameSession`, `tagSession`, `deleteSession`).
+
+```ts
+interface SessionMutationOptions {
+  dir?: string;  // Project directory path. When omitted, all project directories are searched.
+}
+```
 
 ## Reading Session Messages (v0.2.59+)
 
