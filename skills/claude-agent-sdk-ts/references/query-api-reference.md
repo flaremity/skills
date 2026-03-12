@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.71`
+> `@anthropic-ai/claude-agent-sdk@0.2.74`
 
 ## `query(options)` Function
 
@@ -16,7 +16,7 @@ const q: Query = query({ prompt: string, options?: QueryOptions });
 ```ts
 interface QueryOptions {
   // Model selection
-  model?: "sonnet" | "opus" | "haiku";       // Default: "sonnet"
+  model?: string;                            // Model alias or full model ID (default: "sonnet") (v0.2.74+)
 
   // Prompts
   systemPrompt?: string;                      // Replaces default system prompt
@@ -86,6 +86,9 @@ interface QueryOptions {
 
   // Settings override (v0.2.70+)
   settings?: string | Settings;              // Path to settings JSON or inline settings object (highest priority)
+
+  // Agent progress summaries (v0.2.74+)
+  agentProgressSummaries?: boolean;           // Enable periodic AI-generated progress summaries for subagents (default: false)
 }
 ```
 
@@ -164,8 +167,8 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }
-  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.71+)
-  | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; last_tool_name?: string }  // (v0.2.51+)
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.74+)
+  | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; last_tool_name?: string; summary?: string }  // (v0.2.51+, summary v0.2.74+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
   | { type: "progress"; progress: number; total?: number }
@@ -186,8 +189,8 @@ type SDKMessage =
 | `error` | Error occurred | `error`, `code` (optional) |
 | `result` | Final structured output | `content` (JSON string), `sessionId` |
 | `progress` | Progress update | `progress`, `total` (optional) |
-| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `prompt` (v0.2.71+), `uuid`, `session_id` (v0.2.51+) |
-| `system` (subtype: `task_progress`) | Task progress update (v0.2.51+) | `task_id`, `description`, `usage` (`total_tokens`, `tool_uses`, `duration_ms`), `last_tool_name` |
+| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `prompt` (v0.2.74+), `uuid`, `session_id` (v0.2.51+) |
+| `system` (subtype: `task_progress`) | Task progress update (v0.2.51+) | `task_id`, `description`, `usage` (`total_tokens`, `tool_uses`, `duration_ms`), `last_tool_name`, `summary` (v0.2.74+) |
 | `system` (subtype: `local_command_output`) | Local slash command output (v0.2.63+) | `content` |
 | `system` (subtype: `elicitation_complete`) | MCP elicitation completed (v0.2.63+) | `mcp_server_name`, `elicitation_id` |
 | `rate_limit_event` | Rate limit info changed (v0.2.63+) | `rate_limit_info` (`SDKRateLimitInfo`) |
@@ -266,6 +269,26 @@ interface SessionMessage {
   session_id: string;            // Session this message belongs to
   message: unknown;              // Raw message content
   parent_tool_use_id: null;      // Reserved for future use
+}
+```
+
+## `renameSession()` Function (v0.2.74+)
+
+Rename a session by appending a custom-title entry to its JSONL file.
+
+```ts
+import { renameSession, type SessionMutationOptions } from "@anthropic-ai/claude-agent-sdk";
+
+await renameSession(sessionId: string, title: string, options?: SessionMutationOptions): Promise<void>;
+```
+
+### SessionMutationOptions
+
+Options shared by session mutation functions (`renameSession`, `tagSession`, `deleteSession`).
+
+```ts
+interface SessionMutationOptions {
+  dir?: string;  // Project directory path. When omitted, all project directories are searched.
 }
 ```
 
@@ -384,7 +407,7 @@ const myTool = tool({
 interface AgentDefinition {
   name: string;
   description: string;
-  model?: "sonnet" | "opus" | "haiku";
+  model?: string;                      // Model alias or full model ID (v0.2.74+)
   permissionMode?: PermissionMode;
   tools?: Tool[];
   mcpServers?: MCPServerConfig[];

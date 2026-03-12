@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.71`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.74`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-03-07
+> **Last verified:** 2026-03-12
 
 ## Quick Start
 
@@ -141,7 +141,7 @@ await using resumed = unstable_v2_resumeSession(sessionId, { options });
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `prompt` | `string` | *required* | The user prompt |
-| `options.model` | `string` | `"sonnet"` | Model: `"sonnet"`, `"opus"`, `"haiku"` |
+| `options.model` | `string` | `"sonnet"` | Model alias (`"sonnet"`, `"opus"`, `"haiku"`) or full model ID (e.g. `"claude-opus-4-5"`) (v0.2.74+) |
 | `options.systemPrompt` | `string` | `undefined` | System prompt prepended to conversation |
 | `options.appendSystemPrompt` | `string` | `undefined` | Appended after default system prompt |
 | `options.maxTurns` | `number` | `Infinity` | Max agentic turns (API round-trips) |
@@ -166,6 +166,7 @@ await using resumed = unstable_v2_resumeSession(sessionId, { options });
 | `options.betaFeatures` | `string[]` | `[]` | Beta feature flags |
 | `options.thinking` | `ThinkingConfig` | `undefined` | Thinking/reasoning behavior: `{ type: 'adaptive' }`, `{ type: 'enabled', budgetTokens?: number }`, or `{ type: 'disabled' }` (v0.2.50+) |
 | `options.promptSuggestions` | `boolean` | `undefined` | Enable prompt suggestions after each turn (v0.2.50+) |
+| `options.agentProgressSummaries` | `boolean` | `false` | Enable periodic AI-generated progress summaries for subagents — emits `summary` on `task_progress` events (v0.2.74+) |
 | `options.hooks` | `HookConfig` | `undefined` | Event hook configuration |
 | `options.onElicitation` | `OnElicitation` | `undefined` | Callback for MCP elicitation requests — called when an MCP server requests user input and no hook handles it (v0.2.63+) |
 | `options.toolConfig` | `ToolConfig` | `undefined` | Per-tool configuration for built-in tools, e.g. `{ askUserQuestion: { previewFormat: 'html' } }` (v0.2.70+) |
@@ -380,7 +381,7 @@ interface AgentInfo {
 interface AgentDefinition {
   name: string;                        // Agent name (used as tool name)
   description: string;                 // What the agent does
-  model?: string;                      // Model override
+  model?: string;                      // Model alias or full model ID (v0.2.74+)
   permissionMode?: PermissionMode;     // Permission mode for the agent
   tools?: Tool[];                      // Custom tools
   mcpServers?: MCPServerConfig[];      // MCP servers
@@ -480,6 +481,18 @@ interface SDKSessionInfo {
   gitBranch?: string;      // Git branch at session end
   cwd?: string;            // Working directory
 }
+```
+
+### Renaming Sessions (v0.2.74+)
+
+```ts
+import { renameSession } from "@anthropic-ai/claude-agent-sdk";
+
+// Rename a session (appends custom-title entry to session JSONL)
+await renameSession(sessionId, "My new title");
+
+// Specify project directory
+await renameSession(sessionId, "My new title", { dir: '/path/to/project' });
 ```
 
 ### Reading Session Messages (v0.2.59+)
@@ -665,8 +678,8 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }             // System messages
-  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.71+)
-  | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; last_tool_name?: string }  // (v0.2.51+)
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.74+)
+  | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; last_tool_name?: string; summary?: string }  // (v0.2.51+, summary v0.2.74+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
   | { type: "progress"; progress: number; total?: number }
@@ -784,7 +797,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
-| v0.2.71 | `prompt` field on `SDKTaskStartedMessage` — includes the prompt given to a task/subagent |
+| v0.2.74 | `model` field broadened to `string`, `agentProgressSummaries` option, `summary` on task_progress, `renameSession()` function, `SessionMutationOptions` type, new settings fields (`effortLevel`, `modelOverrides`, `autoMemoryDirectory`, `gcpAuthRefresh`, `disableAutoMode`), `prompt` on `SDKTaskStartedMessage` |
 | v0.2.70 | `InstructionsLoaded` hook event, `agent_id`/`agent_type` on hook inputs, `toolConfig` + `settings` query options, `includeWorktrees` on `listSessions`, exported `Settings` and `ToolConfig` types, `SDKControlGetSettingsRequest`, `priority` field on task messages, `enableWeakerNetworkIsolation` sandbox option, `supportsFastMode` model field |
 | v0.2.63 | MCP elicitation support (`onElicitation` callback, `ElicitationRequest`/`ElicitationResult` types), `Elicitation`/`ElicitationResult` hook events, `AgentInfo` type + `supportedAgents()` method, `FastModeState` type, `SDKLocalCommandOutputMessage`/`SDKElicitationCompleteMessage` message types, `SDKRateLimitInfo` type, sandbox schemas changed to factory functions |
 | v0.2.59 | `getSessionMessages()` function, `GetSessionMessagesOptions` type, `SessionMessage` type for reading session transcripts |
@@ -802,4 +815,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.71.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.74.*
