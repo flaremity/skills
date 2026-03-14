@@ -1,6 +1,6 @@
 # Session Management
 
-> `@anthropic-ai/claude-agent-sdk@0.2.71`
+> `@anthropic-ai/claude-agent-sdk@0.2.76`
 
 ## Overview
 
@@ -141,6 +141,7 @@ const recent = await listSessions({ dir: '/path/to/project', limit: 5 });
 interface ListSessionsOptions {
   dir?: string;    // Project directory (includes git worktrees). Omit for all projects.
   limit?: number;  // Maximum number of sessions to return.
+  offset?: number; // Number of sessions to skip (for pagination). Default: 0. (v0.2.76+)
 }
 ```
 
@@ -151,11 +152,13 @@ interface SDKSessionInfo {
   sessionId: string;       // Unique session identifier (UUID)
   summary: string;         // Display title: custom title, auto-generated summary, or first prompt
   lastModified: number;    // Last modified time (ms since epoch)
-  fileSize: number;        // Session file size in bytes
+  fileSize?: number;       // File size in bytes (optional, local JSONL only; v0.2.76+)
   customTitle?: string;    // User-set title via /rename
   firstPrompt?: string;    // First meaningful user prompt
   gitBranch?: string;      // Git branch at session end
   cwd?: string;            // Working directory
+  tag?: string;            // User-set session tag (v0.2.76+)
+  createdAt?: number;      // Creation time in ms since epoch (v0.2.76+)
 }
 ```
 
@@ -234,6 +237,61 @@ interface AgentInfo {
   name: string;          // Agent type identifier (e.g., "Explore")
   description: string;   // When to use this agent
   model?: string;        // Model alias (inherits parent if omitted)
+}
+```
+
+## Session Mutation Functions (v0.2.76+)
+
+New functions for modifying session metadata and forking sessions.
+
+```ts
+import { forkSession, getSessionInfo, renameSession, tagSession } from "@anthropic-ai/claude-agent-sdk";
+```
+
+### Forking a Session
+
+Create an independent copy of a session with fresh UUIDs.
+
+```ts
+// Full fork
+const { sessionId: forkedId } = await forkSession(originalSessionId);
+
+// Fork from a specific message
+const { sessionId: branchId } = await forkSession(originalSessionId, {
+  upToMessageId: "msg-uuid",
+  title: "Exploring alternative approach",
+});
+```
+
+Forked sessions start without undo history. Resume with `unstable_v2_resumeSession(forkedId)`.
+
+### Getting Session Info
+
+Read metadata for a single session without scanning all sessions.
+
+```ts
+const info = await getSessionInfo(sessionId, { dir: '/path/to/project' });
+if (info) {
+  console.log(`${info.summary} — last modified ${new Date(info.lastModified)}`);
+}
+```
+
+### Renaming and Tagging Sessions
+
+```ts
+await renameSession(sessionId, "Descriptive Title");
+
+await tagSession(sessionId, "in-progress");
+await tagSession(sessionId, null);  // Clear tag
+```
+
+### SessionMutationOptions
+
+All mutation functions accept an optional `dir` to narrow the search:
+
+```ts
+interface SessionMutationOptions {
+  dir?: string;  // Project directory. Omit to search all projects.
 }
 ```
 
