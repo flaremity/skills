@@ -1,6 +1,6 @@
 /**
  * Hook events — react to SDK lifecycle events
- * @anthropic-ai/claude-agent-sdk@0.2.71
+ * @anthropic-ai/claude-agent-sdk@0.2.76
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
 
@@ -125,6 +125,18 @@ async function main() {
               if (event.parent_file_path) {
                 console.log(`  Parent: ${event.parent_file_path}`);
               }
+            },
+          },
+        ],
+
+        // v0.2.76+: React to context compaction
+        PostCompact: [
+          {
+            handler: async (event) => {
+              console.log(
+                `[PostCompact] Trigger: ${event.trigger}, Summary length: ${event.compact_summary.length}`
+              );
+              console.log(`  Summary: ${event.compact_summary.slice(0, 200)}...`);
             },
           },
         ],

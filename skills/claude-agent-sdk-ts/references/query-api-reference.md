@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.71`
+> `@anthropic-ai/claude-agent-sdk@0.2.76`
 
 ## `query(options)` Function
 
@@ -16,7 +16,7 @@ const q: Query = query({ prompt: string, options?: QueryOptions });
 ```ts
 interface QueryOptions {
   // Model selection
-  model?: "sonnet" | "opus" | "haiku";       // Default: "sonnet"
+  model?: string;                              // Model alias or full model ID. Default: "sonnet"
 
   // Prompts
   systemPrompt?: string;                      // Replaces default system prompt
@@ -86,6 +86,9 @@ interface QueryOptions {
 
   // Settings override (v0.2.70+)
   settings?: string | Settings;              // Path to settings JSON or inline settings object (highest priority)
+
+  // Agent progress summaries (v0.2.76+)
+  agentProgressSummaries?: boolean;           // Enable periodic AI-generated progress summaries for subagents
 }
 ```
 
@@ -164,7 +167,7 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }
-  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.71+)
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.76+)
   | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; last_tool_name?: string }  // (v0.2.51+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
@@ -186,7 +189,7 @@ type SDKMessage =
 | `error` | Error occurred | `error`, `code` (optional) |
 | `result` | Final structured output | `content` (JSON string), `sessionId` |
 | `progress` | Progress update | `progress`, `total` (optional) |
-| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `prompt` (v0.2.71+), `uuid`, `session_id` (v0.2.51+) |
+| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `prompt` (v0.2.76+), `uuid`, `session_id` (v0.2.51+) |
 | `system` (subtype: `task_progress`) | Task progress update (v0.2.51+) | `task_id`, `description`, `usage` (`total_tokens`, `tool_uses`, `duration_ms`), `last_tool_name` |
 | `system` (subtype: `local_command_output`) | Local slash command output (v0.2.63+) | `content` |
 | `system` (subtype: `elicitation_complete`) | MCP elicitation completed (v0.2.63+) | `mcp_server_name`, `elicitation_id` |
@@ -218,6 +221,7 @@ const sessions: SDKSessionInfo[] = await listSessions(options?: ListSessionsOpti
 interface ListSessionsOptions {
   dir?: string;              // Project directory to filter by (includes git worktrees). Omit for all projects.
   limit?: number;            // Maximum number of sessions to return.
+  offset?: number;           // Number of sessions to skip (for pagination). Default: 0. (v0.2.76+)
   includeWorktrees?: boolean; // Include sessions from git worktree paths when dir is set. Default: true. (v0.2.70+)
 }
 ```
@@ -229,11 +233,13 @@ interface SDKSessionInfo {
   sessionId: string;       // Unique session identifier (UUID)
   summary: string;         // Display title: custom title, auto-generated summary, or first prompt
   lastModified: number;    // Last modified time (ms since epoch)
-  fileSize: number;        // Session file size in bytes
+  fileSize?: number;       // File size in bytes (optional, local JSONL only; v0.2.76+)
   customTitle?: string;    // User-set title via /rename
   firstPrompt?: string;    // First meaningful user prompt
   gitBranch?: string;      // Git branch at session end
   cwd?: string;            // Working directory
+  tag?: string;            // User-set session tag (v0.2.76+)
+  createdAt?: number;      // Creation time in ms since epoch (v0.2.76+)
 }
 ```
 
@@ -358,6 +364,59 @@ const q2 = query({
 });
 ```
 
+## Session Mutation Functions (v0.2.76+)
+
+```ts
+import { forkSession, getSessionInfo, renameSession, tagSession } from "@anthropic-ai/claude-agent-sdk";
+```
+
+### `forkSession(sessionId, options?)`
+
+Fork a session into a new branch with fresh UUIDs.
+
+```ts
+const { sessionId: forkedId } = await forkSession(sessionId, {
+  upToMessageId?: string;  // Slice transcript up to this UUID (inclusive)
+  title?: string;          // Custom title (defaults to original + " (fork)")
+  dir?: string;            // Project directory
+});
+```
+
+### `getSessionInfo(sessionId, options?)`
+
+Read metadata for a single session by ID (lighter than `listSessions`). Returns `undefined` if not found.
+
+```ts
+const info: SDKSessionInfo | undefined = await getSessionInfo(sessionId, { dir?: string });
+```
+
+### `renameSession(sessionId, title, options?)`
+
+Set a custom title for a session.
+
+```ts
+await renameSession(sessionId, "New Title", { dir?: string });
+```
+
+### `tagSession(sessionId, tag, options?)`
+
+Tag a session. Pass `null` to clear the tag.
+
+```ts
+await tagSession(sessionId, "important", { dir?: string });
+await tagSession(sessionId, null);  // Clear tag
+```
+
+### `SessionMutationOptions`
+
+Shared options for `forkSession`, `renameSession`, `tagSession`, and `deleteSession`.
+
+```ts
+interface SessionMutationOptions {
+  dir?: string;  // Project directory path. Omit to search all projects.
+}
+```
+
 ## `tool()` Helper
 
 ```ts
@@ -384,7 +443,7 @@ const myTool = tool({
 interface AgentDefinition {
   name: string;
   description: string;
-  model?: "sonnet" | "opus" | "haiku";
+  model?: string;                      // Model alias or full model ID (v0.2.76+: widened from union)
   permissionMode?: PermissionMode;
   tools?: Tool[];
   mcpServers?: MCPServerConfig[];

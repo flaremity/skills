@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.71`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.76`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-03-07
+> **Last verified:** 2026-03-14
 
 ## Quick Start
 
@@ -141,7 +141,7 @@ await using resumed = unstable_v2_resumeSession(sessionId, { options });
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `prompt` | `string` | *required* | The user prompt |
-| `options.model` | `string` | `"sonnet"` | Model: `"sonnet"`, `"opus"`, `"haiku"` |
+| `options.model` | `string` | `"sonnet"` | Model alias (`"sonnet"`, `"opus"`, `"haiku"`) or full model ID (`"claude-opus-4-5"`) |
 | `options.systemPrompt` | `string` | `undefined` | System prompt prepended to conversation |
 | `options.appendSystemPrompt` | `string` | `undefined` | Appended after default system prompt |
 | `options.maxTurns` | `number` | `Infinity` | Max agentic turns (API round-trips) |
@@ -170,6 +170,7 @@ await using resumed = unstable_v2_resumeSession(sessionId, { options });
 | `options.onElicitation` | `OnElicitation` | `undefined` | Callback for MCP elicitation requests — called when an MCP server requests user input and no hook handles it (v0.2.63+) |
 | `options.toolConfig` | `ToolConfig` | `undefined` | Per-tool configuration for built-in tools, e.g. `{ askUserQuestion: { previewFormat: 'html' } }` (v0.2.70+) |
 | `options.settings` | `string \| Settings` | `undefined` | Additional settings (path to JSON or object) — loaded as highest-priority "flag settings" layer (v0.2.70+) |
+| `options.agentProgressSummaries` | `boolean` | `false` | Enable periodic AI-generated progress summaries for running subagents — emits `summary` field on `task_progress` events (v0.2.76+) |
 
 ### Permission Modes
 
@@ -380,7 +381,7 @@ interface AgentInfo {
 interface AgentDefinition {
   name: string;                        // Agent name (used as tool name)
   description: string;                 // What the agent does
-  model?: string;                      // Model override
+  model?: string;                      // Model alias or full model ID (v0.2.76+: widened from union to string)
   permissionMode?: PermissionMode;     // Permission mode for the agent
   tools?: Tool[];                      // Custom tools
   mcpServers?: MCPServerConfig[];      // MCP servers
@@ -457,11 +458,9 @@ import { listSessions, type SDKSessionInfo } from "@anthropic-ai/claude-agent-sd
 // List sessions for a specific project
 const sessions: SDKSessionInfo[] = await listSessions({ dir: '/path/to/project' });
 
-// List all sessions across all projects
-const allSessions = await listSessions();
-
-// Limit results
-const recentSessions = await listSessions({ dir: '/path/to/project', limit: 10 });
+// Paginate results (v0.2.76+)
+const page1 = await listSessions({ limit: 50 });
+const page2 = await listSessions({ limit: 50, offset: 50 });
 
 // Exclude git worktree sessions (v0.2.70+)
 const noWorktrees = await listSessions({ dir: '/path/to/project', includeWorktrees: false });
@@ -474,11 +473,13 @@ interface SDKSessionInfo {
   sessionId: string;       // Unique session identifier (UUID)
   summary: string;         // Display title: custom title, auto-generated summary, or first prompt
   lastModified: number;    // Last modified time (ms since epoch)
-  fileSize: number;        // Session file size in bytes
+  fileSize?: number;       // File size in bytes (optional, local JSONL only; v0.2.76+)
   customTitle?: string;    // User-set title via /rename
   firstPrompt?: string;    // First meaningful user prompt
   gitBranch?: string;      // Git branch at session end
   cwd?: string;            // Working directory
+  tag?: string;            // User-set session tag (v0.2.76+)
+  createdAt?: number;      // Creation time in ms since epoch (v0.2.76+)
 }
 ```
 
@@ -509,6 +510,28 @@ interface SessionMessage {
   message: unknown;
   parent_tool_use_id: null;
 }
+```
+
+### Session Mutation Functions (v0.2.76+)
+
+```ts
+import { forkSession, getSessionInfo, renameSession, tagSession } from "@anthropic-ai/claude-agent-sdk";
+
+// Fork a session into a new branch with fresh UUIDs
+const { sessionId: forkedId } = await forkSession(sessionId, {
+  upToMessageId: "msg-uuid",  // Optional: branch from specific point
+  title: "My fork",           // Optional: custom title
+});
+
+// Read metadata for a single session (lighter than listSessions)
+const info = await getSessionInfo(sessionId, { dir: '/path/to/project' });
+
+// Rename a session
+await renameSession(sessionId, "New Title", { dir: '/path/to/project' });
+
+// Tag or untag a session
+await tagSession(sessionId, "important");
+await tagSession(sessionId, null);  // Clear tag
 ```
 
 ### File Checkpointing
@@ -548,6 +571,7 @@ Event hooks let you react to SDK lifecycle events. Added incrementally across ve
 | `ConfigChange` | v0.2.50 | Configuration file changed (source: user/project/local/policy/skills) |
 | `WorktreeCreate` | v0.2.50 | Git worktree created |
 | `WorktreeRemove` | v0.2.50 | Git worktree removed |
+| `PostCompact` | v0.2.76 | After context compaction completes (includes `trigger`: `'manual'` or `'auto'`, and `compact_summary`) |
 | `InstructionsLoaded` | v0.2.70 | CLAUDE.md / memory file loaded (includes `file_path`, `memory_type`, `load_reason`) |
 
 ### Hook Configuration
@@ -665,7 +689,7 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }             // System messages
-  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.71+)
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.76+)
   | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; last_tool_name?: string }  // (v0.2.51+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
@@ -784,7 +808,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
-| v0.2.71 | `prompt` field on `SDKTaskStartedMessage` — includes the prompt given to a task/subagent |
+| v0.2.76 | `PostCompact` hook event, `forkSession()`/`getSessionInfo()`/`renameSession()`/`tagSession()` session functions, `agentProgressSummaries` option, `offset` pagination for `listSessions()`, `tag`/`createdAt` fields on `SDKSessionInfo`, `AgentDefinition.model` widened to `string`, `sparsePaths` worktree option, `prompt` field on task_started messages |
 | v0.2.70 | `InstructionsLoaded` hook event, `agent_id`/`agent_type` on hook inputs, `toolConfig` + `settings` query options, `includeWorktrees` on `listSessions`, exported `Settings` and `ToolConfig` types, `SDKControlGetSettingsRequest`, `priority` field on task messages, `enableWeakerNetworkIsolation` sandbox option, `supportsFastMode` model field |
 | v0.2.63 | MCP elicitation support (`onElicitation` callback, `ElicitationRequest`/`ElicitationResult` types), `Elicitation`/`ElicitationResult` hook events, `AgentInfo` type + `supportedAgents()` method, `FastModeState` type, `SDKLocalCommandOutputMessage`/`SDKElicitationCompleteMessage` message types, `SDKRateLimitInfo` type, sandbox schemas changed to factory functions |
 | v0.2.59 | `getSessionMessages()` function, `GetSessionMessagesOptions` type, `SessionMessage` type for reading session transcripts |
@@ -802,4 +826,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.71.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.76.*
