@@ -1,6 +1,6 @@
 /**
  * Structured output — JSON responses with Zod schemas
- * @anthropic-ai/claude-agent-sdk@0.2.76
+ * @anthropic-ai/claude-agent-sdk@0.2.77
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod";

@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.76`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.77`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-03-14
+> **Last verified:** 2026-03-17
 
 ## Quick Start
 
@@ -69,6 +69,7 @@ const result = await q.result; // Final result after iteration
 | `q.rewindFiles()` | Revert file changes to pre-query state |
 | `q.setPermissionMode(mode)` | Change permission mode mid-query |
 | `q.setModel(model)` | Change model mid-query |
+| `q.applyFlagSettings(settings)` | Merge settings into flag settings layer mid-session (v0.2.77+) |
 | `q.close()` | Close the query and free resources (added v0.2.15) |
 
 #### QueryResult
@@ -572,7 +573,7 @@ Event hooks let you react to SDK lifecycle events. Added incrementally across ve
 | `WorktreeCreate` | v0.2.50 | Git worktree created |
 | `WorktreeRemove` | v0.2.50 | Git worktree removed |
 | `PostCompact` | v0.2.76 | After context compaction completes (includes `trigger`: `'manual'` or `'auto'`, and `compact_summary`) |
-| `InstructionsLoaded` | v0.2.70 | CLAUDE.md / memory file loaded (includes `file_path`, `memory_type`, `load_reason`) |
+| `InstructionsLoaded` | v0.2.70 | CLAUDE.md / memory file loaded (includes `file_path`, `memory_type`, `load_reason`: `'session_start'` \| `'nested_traversal'` \| `'path_glob_match'` \| `'include'` \| `'compact'` (v0.2.77+)) |
 
 ### Hook Configuration
 
@@ -669,6 +670,8 @@ const q = query({
         allowWrite: ["/app/src"],         // Directories allowed for writes
         denyWrite: ["/app/node_modules"], // Directories denied for writes
         denyRead: ["/app/.env"],          // Directories denied for reads
+        allowRead: ["/app/config"],       // Re-allow reading within denyRead regions (v0.2.77+)
+        allowManagedReadPathsOnly: false, // When true, only allowRead paths from policySettings are used (v0.2.77+)
       },
     },
   },
@@ -689,13 +692,14 @@ type SDKMessage =
   | { type: "tool_use"; toolName: string; toolInput: Record<string, unknown> }
   | { type: "tool_result"; toolName: string; content: string }
   | { type: "system"; content: string }             // System messages
-  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.76+)
+  | { type: "system"; subtype: "task_started"; task_id: string; description: string; prompt?: string; uuid: string; session_id: string; timestamp?: string }  // (v0.2.50+, uuid/session_id v0.2.51+, prompt v0.2.76+, timestamp v0.2.77+)
   | { type: "system"; subtype: "task_progress"; task_id: string; description: string; usage: { total_tokens: number; tool_uses: number; duration_ms: number }; last_tool_name?: string }  // (v0.2.51+)
   | { type: "error"; error: string; code?: string }
   | { type: "result"; content: string; sessionId: string }
   | { type: "progress"; progress: number; total?: number }
   | { type: "system"; subtype: "local_command_output"; content: string }  // Local slash command output (v0.2.63+)
   | { type: "system"; subtype: "elicitation_complete"; mcp_server_name: string; elicitation_id: string }  // MCP elicitation completed (v0.2.63+)
+  | { type: "system"; subtype: "api_retry"; attempt: number; max_retries: number; retry_delay_ms: number; error_status: number | null; error: SDKAssistantMessageError }  // API retry event (v0.2.77+)
   | { type: "rate_limit_event"; rate_limit_info: SDKRateLimitInfo }  // Rate limit event with details (v0.2.63+)
   | { type: "prompt_suggestion"; suggestion: string };  // Prompt suggestion (v0.2.50+)
 ```
@@ -808,6 +812,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
+| v0.2.77 | `SDKAPIRetryMessage` type, `applyFlagSettings()` method, `apiProvider` field, permission request `title`/`displayName`/`description` fields, `allowRead`/`allowManagedReadPathsOnly` sandbox permissions, `'compact'` load_reason for `InstructionsLoaded`, `timestamp` on task messages, Claude OAuth control requests |
 | v0.2.76 | `PostCompact` hook event, `forkSession()`/`getSessionInfo()`/`renameSession()`/`tagSession()` session functions, `agentProgressSummaries` option, `offset` pagination for `listSessions()`, `tag`/`createdAt` fields on `SDKSessionInfo`, `AgentDefinition.model` widened to `string`, `sparsePaths` worktree option, `prompt` field on task_started messages |
 | v0.2.70 | `InstructionsLoaded` hook event, `agent_id`/`agent_type` on hook inputs, `toolConfig` + `settings` query options, `includeWorktrees` on `listSessions`, exported `Settings` and `ToolConfig` types, `SDKControlGetSettingsRequest`, `priority` field on task messages, `enableWeakerNetworkIsolation` sandbox option, `supportsFastMode` model field |
 | v0.2.63 | MCP elicitation support (`onElicitation` callback, `ElicitationRequest`/`ElicitationResult` types), `Elicitation`/`ElicitationResult` hook events, `AgentInfo` type + `supportedAgents()` method, `FastModeState` type, `SDKLocalCommandOutputMessage`/`SDKElicitationCompleteMessage` message types, `SDKRateLimitInfo` type, sandbox schemas changed to factory functions |
@@ -826,4 +831,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.76.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.77.*

@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.76`
+> `@anthropic-ai/claude-agent-sdk@0.2.77`
 
 ## `query(options)` Function
 
@@ -142,6 +142,16 @@ interface AgentInfo {
 }
 ```
 
+### `q.applyFlagSettings(settings: Settings): Promise<void>` (v0.2.77+)
+
+Merge settings into the flag settings layer mid-session. Top-level keys are shallow-merged across successive calls. Only available in streaming input mode.
+
+```ts
+await q.applyFlagSettings({
+  permissions: { allow: ['Bash(npm test)'] },
+});
+```
+
 ### `q.reconnectMcpServer(name: string): Promise<void>` (v0.2.21+)
 
 Reconnects a disconnected MCP server by name.
@@ -174,6 +184,7 @@ type SDKMessage =
   | { type: "progress"; progress: number; total?: number }
   | { type: "system"; subtype: "local_command_output"; content: string }  // Local slash command output (v0.2.63+)
   | { type: "system"; subtype: "elicitation_complete"; mcp_server_name: string; elicitation_id: string }  // MCP elicitation completed (v0.2.63+)
+  | { type: "system"; subtype: "api_retry"; attempt: number; max_retries: number; retry_delay_ms: number; error_status: number | null; error: SDKAssistantMessageError }  // API retry event (v0.2.77+)
   | { type: "rate_limit_event"; rate_limit_info: SDKRateLimitInfo }  // Rate limit event with details (v0.2.63+)
   | { type: "prompt_suggestion"; suggestion: string };  // Prompt suggestion (v0.2.50+)
 ```
@@ -189,10 +200,11 @@ type SDKMessage =
 | `error` | Error occurred | `error`, `code` (optional) |
 | `result` | Final structured output | `content` (JSON string), `sessionId` |
 | `progress` | Progress update | `progress`, `total` (optional) |
-| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `prompt` (v0.2.76+), `uuid`, `session_id` (v0.2.51+) |
+| `system` (subtype: `task_started`) | Task spawned (v0.2.50+) | `task_id`, `description`, `prompt` (v0.2.76+), `timestamp` (v0.2.77+), `uuid`, `session_id` (v0.2.51+) |
 | `system` (subtype: `task_progress`) | Task progress update (v0.2.51+) | `task_id`, `description`, `usage` (`total_tokens`, `tool_uses`, `duration_ms`), `last_tool_name` |
 | `system` (subtype: `local_command_output`) | Local slash command output (v0.2.63+) | `content` |
 | `system` (subtype: `elicitation_complete`) | MCP elicitation completed (v0.2.63+) | `mcp_server_name`, `elicitation_id` |
+| `system` (subtype: `api_retry`) | API request failed, will retry (v0.2.77+) | `attempt`, `max_retries`, `retry_delay_ms`, `error_status`, `error` |
 | `rate_limit_event` | Rate limit info changed (v0.2.63+) | `rate_limit_info` (`SDKRateLimitInfo`) |
 | `prompt_suggestion` | Suggested next prompt (v0.2.50+) | `suggestion` |
 
@@ -313,6 +325,24 @@ interface SDKRateLimitInfo {
   overageDisabledReason?: string;
   isUsingOverage?: boolean;
   surpassedThreshold?: number;
+}
+```
+
+## `SDKAPIRetryMessage` Type (v0.2.77+)
+
+Emitted when an API request fails with a retryable error and will be retried after a delay. `error_status` is `null` for connection errors (e.g. timeouts) that had no HTTP response.
+
+```ts
+interface SDKAPIRetryMessage {
+  type: 'system';
+  subtype: 'api_retry';
+  attempt: number;           // Current retry attempt number
+  max_retries: number;       // Maximum retries configured
+  retry_delay_ms: number;    // Delay before next retry in milliseconds
+  error_status: number | null;  // HTTP status code, or null for connection errors
+  error: SDKAssistantMessageError;
+  uuid: UUID;
+  session_id: string;
 }
 ```
 
