@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.76`
+> `@anthropic-ai/claude-agent-sdk@0.2.79`
 
 ## `query(options)` Function
 
@@ -174,6 +174,7 @@ type SDKMessage =
   | { type: "progress"; progress: number; total?: number }
   | { type: "system"; subtype: "local_command_output"; content: string }  // Local slash command output (v0.2.63+)
   | { type: "system"; subtype: "elicitation_complete"; mcp_server_name: string; elicitation_id: string }  // MCP elicitation completed (v0.2.63+)
+  | { type: "system"; subtype: "api_retry"; attempt: number; max_retries: number; retry_delay_ms: number; error_status: number | null; error: SDKAssistantMessageError }  // API retry event (v0.2.79+)
   | { type: "rate_limit_event"; rate_limit_info: SDKRateLimitInfo }  // Rate limit event with details (v0.2.63+)
   | { type: "prompt_suggestion"; suggestion: string };  // Prompt suggestion (v0.2.50+)
 ```
@@ -193,6 +194,7 @@ type SDKMessage =
 | `system` (subtype: `task_progress`) | Task progress update (v0.2.51+) | `task_id`, `description`, `usage` (`total_tokens`, `tool_uses`, `duration_ms`), `last_tool_name` |
 | `system` (subtype: `local_command_output`) | Local slash command output (v0.2.63+) | `content` |
 | `system` (subtype: `elicitation_complete`) | MCP elicitation completed (v0.2.63+) | `mcp_server_name`, `elicitation_id` |
+| `system` (subtype: `api_retry`) | API request failed, will retry (v0.2.79+) | `attempt`, `max_retries`, `retry_delay_ms`, `error_status` (null for connection errors), `error` |
 | `rate_limit_event` | Rate limit info changed (v0.2.63+) | `rate_limit_info` (`SDKRateLimitInfo`) |
 | `prompt_suggestion` | Suggested next prompt (v0.2.50+) | `suggestion` |
 

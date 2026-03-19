@@ -1,6 +1,6 @@
 # Permissions Guide
 
-> `@anthropic-ai/claude-agent-sdk@0.2.76`
+> `@anthropic-ai/claude-agent-sdk@0.2.79`
 
 ## Permission Modes
 
@@ -146,6 +146,8 @@ query({
         allowWrite: ["/app/src", "/app/dist"],  // Allowed write paths
         denyWrite: ["/app/node_modules"],         // Denied write paths
         denyRead: ["/app/.env"],                  // Denied read paths
+        allowRead: ["/app/.env.example"],         // Re-allow reading within denyRead regions (v0.2.79+)
+        allowManagedReadPathsOnly: false,         // When true, only allowRead from policySettings used (v0.2.79+)
       },
     },
   },

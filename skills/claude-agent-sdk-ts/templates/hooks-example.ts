@@ -1,6 +1,6 @@
 /**
  * Hook events — react to SDK lifecycle events
- * @anthropic-ai/claude-agent-sdk@0.2.76
+ * @anthropic-ai/claude-agent-sdk@0.2.79
  */
 import { query } from "@anthropic-ai/claude-agent-sdk";
 
@@ -71,6 +71,21 @@ async function main() {
                 console.log(`[Stop] Last message: ${event.last_assistant_message.slice(0, 100)}`);
               }
               printMetrics();
+            },
+          },
+        ],
+
+        // v0.2.79+: React to agent stop failures
+        StopFailure: [
+          {
+            handler: async (event) => {
+              console.error(`[StopFailure] Error: ${event.error.message}`);
+              if (event.error_details) {
+                console.error(`  Details: ${event.error_details}`);
+              }
+              if (event.last_assistant_message) {
+                console.error(`  Last message: ${event.last_assistant_message.slice(0, 200)}`);
+              }
             },
           },
         ],
