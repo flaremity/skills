@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.79`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.80`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-03-19
+> **Last verified:** 2026-03-20
 
 ## Quick Start
 
@@ -815,6 +815,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
+| v0.2.80 | New `settings` source type for inline marketplace plugin declarations in `settings.json` (npm, pip, url, github, git-subdir sources) |
 | v0.2.79 | `StopFailure` hook event, `SDKAPIRetryMessage` message type, `applyFlagSettings()` session method, `apiProvider` field, `allowRead`/`allowManagedReadPathsOnly` sandbox options, `'resume'` exit reason, `'compact'` load_reason for InstructionsLoaded, `title`/`displayName`/`description` on permission requests, `timestamp` on task messages |
 | v0.2.76 | `PostCompact` hook event, `forkSession()`/`getSessionInfo()`/`renameSession()`/`tagSession()` session functions, `agentProgressSummaries` option, `offset` pagination for `listSessions()`, `tag`/`createdAt` fields on `SDKSessionInfo`, `AgentDefinition.model` widened to `string`, `sparsePaths` worktree option, `prompt` field on task_started messages |
 | v0.2.70 | `InstructionsLoaded` hook event, `agent_id`/`agent_type` on hook inputs, `toolConfig` + `settings` query options, `includeWorktrees` on `listSessions`, exported `Settings` and `ToolConfig` types, `SDKControlGetSettingsRequest`, `priority` field on task messages, `enableWeakerNetworkIsolation` sandbox option, `supportsFastMode` model field |
@@ -834,4 +835,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.79.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.80.*
