@@ -8,9 +8,9 @@ user_invocable: true
 
 # Claude Agent SDK — TypeScript Reference
 
-> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.79`
+> **Package:** `@anthropic-ai/claude-agent-sdk@0.2.81`
 > **Runtime:** Node.js 18+ / Bun 1.0+
-> **Last verified:** 2026-03-19
+> **Last verified:** 2026-03-21
 
 ## Quick Start
 
@@ -171,6 +171,7 @@ await using resumed = unstable_v2_resumeSession(sessionId, { options });
 | `options.toolConfig` | `ToolConfig` | `undefined` | Per-tool configuration for built-in tools, e.g. `{ askUserQuestion: { previewFormat: 'html' } }` (v0.2.70+) |
 | `options.settings` | `string \| Settings` | `undefined` | Additional settings (path to JSON or object) — loaded as highest-priority "flag settings" layer (v0.2.70+) |
 | `options.agentProgressSummaries` | `boolean` | `false` | Enable periodic AI-generated progress summaries for running subagents — emits `summary` field on `task_progress` events (v0.2.76+) |
+| `options.initialUserMessage` | `string` | `undefined` | Initial user message to prefill the conversation context (v0.2.81+) |
 
 ### Permission Modes
 
@@ -578,6 +579,10 @@ Event hooks let you react to SDK lifecycle events. Added incrementally across ve
 | `PostCompact` | v0.2.76 | After context compaction completes (includes `trigger`: `'manual'` or `'auto'`, and `compact_summary`) |
 | `InstructionsLoaded` | v0.2.70 | CLAUDE.md / memory file loaded (includes `file_path`, `memory_type`, `load_reason`: `'session_start'` \| `'nested_traversal'` \| `'path_glob_match'` \| `'include'` \| `'compact'` (v0.2.79+)) |
 
+### Hook Command Configuration
+
+Hook commands support a `shell` field (v0.2.81+) to select the shell interpreter: `'bash'` (default, uses `$SHELL`) or `'powershell'` (uses `pwsh`).
+
 ### Hook Configuration
 
 ```ts
@@ -815,6 +820,7 @@ Settings are loaded in order (later overrides earlier):
 
 | Version | Key Change |
 |---------|-----------|
+| v0.2.81 | Exported `SDKControlRequest`/`SDKControlResponse` types, `initialUserMessage` query option, `shell` field on hook commands (`'bash'` \| `'powershell'`), new settings: `defaultShell`, `strictPluginOnlyCustomization`, `showClearContextOnPlanAccept`, `autoDreamEnabled`, inline `source: 'settings'` marketplace declarations |
 | v0.2.79 | `StopFailure` hook event, `SDKAPIRetryMessage` message type, `applyFlagSettings()` session method, `apiProvider` field, `allowRead`/`allowManagedReadPathsOnly` sandbox options, `'resume'` exit reason, `'compact'` load_reason for InstructionsLoaded, `title`/`displayName`/`description` on permission requests, `timestamp` on task messages |
 | v0.2.76 | `PostCompact` hook event, `forkSession()`/`getSessionInfo()`/`renameSession()`/`tagSession()` session functions, `agentProgressSummaries` option, `offset` pagination for `listSessions()`, `tag`/`createdAt` fields on `SDKSessionInfo`, `AgentDefinition.model` widened to `string`, `sparsePaths` worktree option, `prompt` field on task_started messages |
 | v0.2.70 | `InstructionsLoaded` hook event, `agent_id`/`agent_type` on hook inputs, `toolConfig` + `settings` query options, `includeWorktrees` on `listSessions`, exported `Settings` and `ToolConfig` types, `SDKControlGetSettingsRequest`, `priority` field on task messages, `enableWeakerNetworkIsolation` sandbox option, `supportsFastMode` model field |
@@ -834,4 +840,4 @@ Settings are loaded in order (later overrides earlier):
 
 ---
 
-*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.79.*
+*Based on claude-agent-sdk skill by Jeremy Dawes ([jezweb/claude-skills](https://github.com/jezweb/claude-skills), MIT License). Updated and expanded for SDK v0.2.81.*
