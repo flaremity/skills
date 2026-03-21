@@ -1,6 +1,6 @@
 # Query API Reference
 
-> `@anthropic-ai/claude-agent-sdk@0.2.79`
+> `@anthropic-ai/claude-agent-sdk@0.2.81`
 
 ## `query(options)` Function
 
@@ -89,6 +89,9 @@ interface QueryOptions {
 
   // Agent progress summaries (v0.2.76+)
   agentProgressSummaries?: boolean;           // Enable periodic AI-generated progress summaries for subagents
+
+  // Initial user message (v0.2.81+)
+  initialUserMessage?: string;               // Prefill the conversation with an initial user message
 }
 ```
 
